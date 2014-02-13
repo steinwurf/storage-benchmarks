@@ -63,27 +63,30 @@ def configure(conf):
         recurse_helper(conf, 'gauge')
         recurse_helper(conf, 'tables')
 
-def simd_cflags(bld):
-    """
-    returns cflags used to compile in SIMD mode
-    """
-    CC = bld.env.get_flat("CC")
+    set_simd_flags(conf)
 
-    # Matches both /usr/bin/g++ and /user/bin/clang++
+def set_simd_flags(conf):
+    """
+    Sets flags used to compile in SIMD mode
+    """
+    CC = conf.env.get_flat("CC")
+    flags = []
+
     if 'gcc' in CC or 'clang' in CC:
-        return ['-O3', '-mmmx', '-msse', '-msse2', '-msse3',
-                 '-mssse3', '-fPIC']
+        flags += ['-O3', '-fPIC']
+        flags += conf.mkspec_try_flags('cflags',
+                    ['-mmmx', '-msse', '-msse2', '-msse3', '-mssse3'])
 
     elif 'CL.exe' in CC or 'cl.exe' in CC:
-        return []
+        pass
 
     else:
-        bld.fatal('Unknown compiler - no SIMD flags specified')
+        conf.fatal('Unknown compiler - no SIMD flags specified')
+
+    conf.env['CFLAGS_SIMD_SHARED'] = flags
+    conf.env['CXXFLAGS_SIMD_SHARED'] = flags
 
 def build(bld):
-
-    # Set the compiler specific cflags
-    bld.env['CFLAGS_SIMD_SHARED'] = simd_cflags(bld)
 
     if '-O2' in bld.env['CFLAGS']:
         bld.env['CFLAGS'].remove('-O2')
