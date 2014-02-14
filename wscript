@@ -71,11 +71,21 @@ def set_simd_flags(conf):
     """
     CC = conf.env.get_flat("CC")
     flags = []
+    defines = []
 
     if 'gcc' in CC or 'clang' in CC:
         flags += ['-O3', '-fPIC']
         flags += conf.mkspec_try_flags('cflags',
-                    ['-mmmx', '-msse', '-msse2', '-msse3', '-mssse3'])
+                    ['-mmmx', '-msse', '-msse2', '-msse3', '-mpclmul',
+                     '-mssse3', '-msse4.1', '-msse4.2', '-mavx'])
+
+        if '-msse' in flags: defines.append('INTEL_SSE')
+        if '-msse2' in flags: defines.append('INTEL_SSE2')
+        if '-msse3' in flags: defines.append('INTEL_SSE3')
+        if '-mpclmul' in flags: defines.append('INTEL_SSE4_PCLMUL')
+        if '-mssse3' in flags: defines.append('INTEL_SSSE3')
+        if '-msse4.1' in flags: defines.append('INTEL_SSE4')
+        if '-msse4.2' in flags: defines.append('INTEL_SSE4')
 
     elif 'CL.exe' in CC or 'cl.exe' in CC:
         pass
@@ -85,6 +95,7 @@ def set_simd_flags(conf):
 
     conf.env['CFLAGS_SIMD_SHARED'] = flags
     conf.env['CXXFLAGS_SIMD_SHARED'] = flags
+    conf.env['DEFINES_SIMD_SHARED'] = defines
 
 def build(bld):
 
