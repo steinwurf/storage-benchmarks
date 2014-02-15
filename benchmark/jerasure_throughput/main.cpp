@@ -488,12 +488,13 @@ typedef throughput_benchmark<reed_sol_van_encoder, reed_sol_van_decoder>
 //     run_benchmark();
 // }
 
-BENCHMARK_F(gauge::time_benchmark, Jerasure, Matrix, 1)
+BENCHMARK(Jerasure, Matrix, 1)
 {
     int* matrix = 0;
     RUN
     {
         matrix = reed_sol_vandermonde_coding_matrix(16, 16, 8);
+        assert(matrix);
     }
     if (matrix) { free(matrix); matrix = 0; }
 }
