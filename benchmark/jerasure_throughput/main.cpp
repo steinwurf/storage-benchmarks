@@ -135,7 +135,7 @@ struct throughput_benchmark : public gauge::time_benchmark
 {
     void init()
     {
-        m_factor = 2;
+        m_factor = 1;
         gauge::time_benchmark::init();
     }
 
