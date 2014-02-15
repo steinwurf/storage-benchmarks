@@ -601,10 +601,10 @@ int main (int argc, char **argv)
 //     total_time += t2.tv_sec;
 //     total_time -= t1.tv_sec;
     // Use real megabytes here!
-    printf("Coding time: %.3f us\n", coding_time * 1000000.0);
-    printf("Total time:  %.3f us\n", total_time * 1000000.0);
-    printf("Encoding (MB/sec): %0.10f\n", (size/1000000.0)/coding_time);
-    printf("En_Total (MB/sec): %0.10f\n", (size/1000000.0)/total_time);
+    printf("Coding time: %.3f us\n", coding_time);
+    printf("Total time:  %.3f us\n", total_time);
+    printf("Encoding (MB/sec): %0.10f\n", size/coding_time);
+    printf("En_Total (MB/sec): %0.10f\n", size/total_time);
 }
 
 /* is_prime returns 1 if number if prime, 0 if not prime */
