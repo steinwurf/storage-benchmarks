@@ -22,11 +22,11 @@ class PXTimer
 {
 private:
 	clock_t zeroClock;
-#ifdef _WIN32    
+#ifdef _WIN32
     LARGE_INTEGER mStartTime;
-    LARGE_INTEGER mFrequency;    
+    LARGE_INTEGER mFrequency;
 #else
-	struct timeval start;
+	struct timespec start;
 #endif
 
 public:
@@ -38,13 +38,12 @@ public:
 
 	/** Changes the timer backwards by 'delta' microseconds */
 	void change(long delta);
-	
-	/** Returns microseconds since initialisation or last reset */
-	double get();	
 
-	/** Returns microseconds since initialisation or last reset, only CPU time measured */	
+	/** Returns microseconds since initialisation or last reset */
+	double get();
+
+	/** Returns microseconds since initialisation or last reset, only CPU time measured */
 	double getCPU();
 };
 
 #endif
-
