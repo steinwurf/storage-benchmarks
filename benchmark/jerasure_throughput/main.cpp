@@ -315,6 +315,7 @@ struct throughput_benchmark : public gauge::time_benchmark
 //                 return;
 //             }
         }
+        m_decoded_symbols += m_payloads.size();
     }
 
     /// Run the encoder
