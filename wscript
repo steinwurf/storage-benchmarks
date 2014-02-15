@@ -76,14 +76,14 @@ def set_simd_flags(conf):
     if 'gcc' in CC or 'clang' in CC:
         flags += ['-O3', '-fPIC']
         flags += conf.mkspec_try_flags('cflags',
-                    ['-mmmx', '-msse', '-msse2', '-msse3', '-mpclmul',
-                     '-mssse3', '-msse4.1', '-msse4.2', '-mavx'])
+                    ['-mmmx', '-msse', '-msse2', '-msse3', '-mssse3',
+                     '-mpclmul', '-msse4.1', '-msse4.2', '-mavx'])
 
         if '-msse' in flags: defines.append('INTEL_SSE')
         if '-msse2' in flags: defines.append('INTEL_SSE2')
         if '-msse3' in flags: defines.append('INTEL_SSE3')
-        if '-mpclmul' in flags: defines.append('INTEL_SSE4_PCLMUL')
         if '-mssse3' in flags: defines.append('INTEL_SSSE3')
+        if '-mpclmul' in flags: defines.append('INTEL_SSE4_PCLMUL')
         if '-msse4.1' in flags: defines.append('INTEL_SSE4')
         if '-msse4.2' in flags: defines.append('INTEL_SSE4')
 

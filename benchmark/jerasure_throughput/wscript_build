@@ -2,8 +2,8 @@
 # encoding: utf-8
 
 bld.program(
-    features = 'c benchmark',
-    source   = ['encoder.c'],
+    features = 'cxx test benchmark',
+    source   = ['main.cpp'],
     target   = 'jerasure_throughput',
     use      = ['jerasure', 'gf_complete',
                 'boost_includes', 'boost_system', 'boost_timer',
