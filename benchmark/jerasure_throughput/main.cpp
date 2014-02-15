@@ -250,6 +250,11 @@ struct throughput_benchmark : public gauge::time_benchmark
         results.set_value("throughput", measurement());
     }
 
+    bool needs_warmup_iteration()
+    {
+        return false;
+    }
+
     bool accept_measurement()
     {
         gauge::config_set cs = get_current_configuration();
@@ -269,7 +274,8 @@ struct throughput_benchmark : public gauge::time_benchmark
                               m_data_in.begin()));
         }
 
-        return gauge::time_benchmark::accept_measurement();
+        return true;
+        //return gauge::time_benchmark::accept_measurement();
     }
 
     std::string unit_text() const
@@ -483,21 +489,21 @@ BENCHMARK_OPTION(throughput_options)
 typedef throughput_benchmark<reed_sol_van_encoder, reed_sol_van_decoder>
     reed_sol_van_throughput;
 
-// BENCHMARK_F(reed_sol_van_throughput, Jerasure, ReedSolVan, 5)
-// {
-//     run_benchmark();
-// }
-
-BENCHMARK(Jerasure, Matrix, 5)
+BENCHMARK_F(reed_sol_van_throughput, Jerasure, ReedSolVan, 1)
 {
-    int* matrix = 0;
-    RUN
-    {
-        matrix = reed_sol_vandermonde_coding_matrix(16, 16, 8);
-        assert(matrix);
-        if (matrix) { free(matrix); matrix = 0; }
-    }
+    run_benchmark();
 }
+
+// BENCHMARK(Jerasure, Matrix, 5)
+// {
+//     int* matrix = 0;
+//     RUN
+//     {
+//         matrix = reed_sol_vandermonde_coding_matrix(16, 16, 8);
+//         assert(matrix);
+//         if (matrix) { free(matrix); matrix = 0; }
+//     }
+// }
 
 
 #include <boost/chrono.hpp>
@@ -511,16 +517,16 @@ double get_micro(bc::high_resolution_clock::duration delta)
 
 int main(int argc, const char* argv[])
 {
-    for (uint32_t i = 0; i < 10; i++)
-    {
-        bc::high_resolution_clock::time_point t1, t2;
-        t1 = bc::high_resolution_clock::now();
-        int* matrix = reed_sol_vandermonde_coding_matrix(16, 16, 8);
-        t2 = bc::high_resolution_clock::now();
-        double matrix_time = get_micro(t2 - t1);
-        printf("Matrix time:  %.3f us\n", matrix_time);
-        if (matrix) { free(matrix); matrix = 0; }
-    }
+//     for (uint32_t i = 0; i < 10; i++)
+//     {
+//         bc::high_resolution_clock::time_point t1, t2;
+//         t1 = bc::high_resolution_clock::now();
+//         int* matrix = reed_sol_vandermonde_coding_matrix(16, 16, 8);
+//         t2 = bc::high_resolution_clock::now();
+//         double matrix_time = get_micro(t2 - t1);
+//         printf("Matrix time:  %.3f us\n", matrix_time);
+//         if (matrix) { free(matrix); matrix = 0; }
+//     }
 
     srand(static_cast<uint32_t>(time(0)));
 
