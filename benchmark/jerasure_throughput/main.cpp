@@ -33,15 +33,13 @@ struct reed_sol_van_encoder
         w = 8;
         m_block_size = m_symbols * m_symbol_size;
 
-        // Allocate data and coding pointer arrays
-        data = new char*[k];
-        coding = new char*[m];
+        // Resize data and coding pointer vectors
+        data.resize(k);
+        coding.resize(m);
     }
 
     ~reed_sol_van_encoder()
     {
-        if (data) delete[] data;
-        if (coding) delete[] coding;
         // matrix was allocated with malloc by jerasure: deallocate with free!
         if (matrix) { free(matrix); matrix = 0; }
     }
@@ -73,7 +71,8 @@ struct reed_sol_van_encoder
             coding[i] = (char*)&(payloads[i][0]);
         }
 
-        jerasure_matrix_encode(k, m, w, matrix, data, coding, m_symbol_size);
+        jerasure_matrix_encode(k, m, w, matrix, &data[0], &coding[0],
+                               m_symbol_size);
     }
 
     uint32_t block_size() { return m_block_size; }
@@ -91,9 +90,9 @@ protected:
     // Size of a full generation (k symbols)
     uint32_t m_block_size;
 
-    /* Jerasure Arguments */
-    char** data;
-    char** coding;
+    // Jerasure arguments
+    std::vector<char*> data;
+    std::vector<char*> coding;
     int* matrix;
 };
 
@@ -101,19 +100,67 @@ protected:
 struct reed_sol_van_decoder
 {
     reed_sol_van_decoder(uint32_t symbols, uint32_t symbol_size) :
-        m_symbols(symbols), m_symbol_size(symbol_size)
+        m_symbols(symbols), m_symbol_size(symbol_size), matrix(0)
     {
         k = m_symbols;
         m = m_symbols;
         w = 8;
         m_block_size = m_symbols * m_symbol_size;
+        m_decoding_result = -1;
 
-//         matrix = reed_sol_vandermonde_coding_matrix(k, m, w);
-//
-//         // Allocate data and coding pointer arrays
-//         data = new char*[k];
-//         coding = new char*[m];
+        // Resize data and coding pointer vectors
+        data.resize(k);
+        coding.resize(m);
+
+        // Simulate m erasures (erase all original symbols)
+        erasures.resize(m+1);
+        // No original symbols used during decoding (worst case)
+        for (int i = 0; i < m; i++)
+        {
+            erasures[i] = i;
+        }
+        // Terminate erasures vector with a -1 value
+        erasures[m] = -1;
     }
+
+    ~reed_sol_van_decoder()
+    {
+        // matrix was allocated with malloc by jerasure: deallocate with free!
+        if (matrix) { free(matrix); matrix = 0; }
+    }
+
+    void initialize()
+    {
+        if (matrix) { free(matrix); matrix = 0; }
+        matrix = reed_sol_vandermonde_coding_matrix(k, m, w);
+    }
+
+    void decode_all(std::vector<uint8_t>& data_out,
+                    std::vector<std::vector<uint8_t>>& payloads)
+    {
+        assert(matrix != 0);
+        uint32_t payload_count = payloads.size();
+        uint32_t data_size = data_out.size();
+        assert(payload_count == (uint32_t)m);
+
+        // Set data pointers to point to the output symbols
+        for (int i = 0; i < k; i++)
+        {
+            assert((i+1) * m_symbol_size <= data_size);
+            data[i] = (char*)&data_out[i * m_symbol_size];
+        }
+
+        for (uint32_t i = 0; i < payload_count; ++i)
+        {
+            coding[i] = (char*)&(payloads[i][0]);
+        }
+
+        m_decoding_result =
+            jerasure_matrix_decode(k, m, w, matrix, 1, &erasures[0], &data[0],
+                                   &coding[0], m_symbol_size);
+    }
+
+    bool is_complete() { return (m_decoding_result != -1); }
 
     uint32_t block_size() { return m_block_size; }
     uint32_t symbol_size() { return m_symbol_size; }
@@ -130,10 +177,12 @@ protected:
     // Size of a full generation (k symbols)
     uint32_t m_block_size;
 
-    /* Jerasure Arguments */
-    char** data;
-    char** coding;
+    // Jerasure arguments
+    std::vector<char*> data;
+    std::vector<char*> coding;
     int* matrix;
+    std::vector<int> erasures;
+    int m_decoding_result;
 };
 
 /// A test block represents an encoder and decoder pair
@@ -204,19 +253,18 @@ struct throughput_benchmark : public gauge::time_benchmark
 
         std::string type = cs.get_value<std::string>("type");
 
-//         if(type == "decoder")
-//         {
-//             // If we are benchmarking a decoder we only accept
-//             // the measurement if the decoding was successful
-//             if(!m_decoder->is_complete())
-//             {
-//                 // We did not generate enough payloads to decode successfully,
-//                 // so we will generate more payloads for next run
-//                 m_factor++;
-//
-//                 return false;
-//             }
-//         }
+        if(type == "decoder")
+        {
+            // If we are benchmarking a decoder, we only accept
+            // the measurement if the decoding was successful
+            if (m_decoder->is_complete() == false)
+            {
+                return false;
+            }
+            // At this point, the output data should be equal to the input data
+            assert(std::equal(m_data_out.begin(), m_data_out.end(),
+                              m_data_in.begin()));
+        }
 
         return gauge::time_benchmark::accept_measurement();
     }
@@ -267,14 +315,15 @@ struct throughput_benchmark : public gauge::time_benchmark
         m_decoder = std::make_shared<Decoder>(symbols, symbol_size);
 
         // Prepare the data to be encoded
-        m_encoded_data.resize(m_encoder->block_size());
+        m_data_in.resize(m_encoder->block_size());
+        m_data_out.resize(m_encoder->block_size());
 
-        for (uint8_t &e : m_encoded_data)
+        for (uint8_t &e : m_data_in)
         {
             e = rand() % 256;
         }
 
-        m_encoder->set_symbols(&m_encoded_data[0], m_encoded_data.size());
+        m_encoder->set_symbols(&m_data_in[0], m_data_in.size());
 
         // Prepare storage to the encoded payloads
         uint32_t payload_count = symbols * m_factor;
@@ -284,13 +333,11 @@ struct throughput_benchmark : public gauge::time_benchmark
         {
             m_payloads[i].resize(m_encoder->payload_size());
         }
-
-        m_temp_payload.resize(m_encoder->payload_size());
     }
 
     void encode_payloads()
     {
-        m_encoder->set_symbols(&m_encoded_data[0], m_encoded_data.size());
+        m_encoder->set_symbols(&m_data_in[0], m_data_in.size());
 
         m_encoder->encode_all(m_payloads);
         m_encoded_symbols += m_payloads.size();
@@ -298,23 +345,7 @@ struct throughput_benchmark : public gauge::time_benchmark
 
     void decode_payloads()
     {
-        uint32_t payload_count = m_payloads.size();
-
-        for (uint32_t i = 0; i < payload_count; ++i)
-        {
-            std::copy(m_payloads[i].begin(),
-                      m_payloads[i].end(),
-                      m_temp_payload.begin());
-
-//             m_decoder->decode(&m_temp_payload[0]);
-//
-//             ++m_decoded_symbols;
-//
-//             if(m_decoder->is_complete())
-//             {
-//                 return;
-//             }
-        }
+        m_decoder->decode_all(m_data_out, m_payloads);
         m_decoded_symbols += m_payloads.size();
     }
 
@@ -341,14 +372,11 @@ struct throughput_benchmark : public gauge::time_benchmark
         RUN
         {
             // We have to make sure the decoder is in a "clean" state
-            // i.e. no symbols already decoded.
-            //m_decoder->initialize();
-
+            m_decoder->initialize();
             // Decode the payloads
             decode_payloads();
         }
     }
-
 
     void run_benchmark()
     {
@@ -384,15 +412,14 @@ protected:
     /// The number of symbols decoded
     uint32_t m_decoded_symbols;
 
-    /// The data encoded
-    std::vector<uint8_t> m_encoded_data;
+    /// The input data
+    std::vector<uint8_t> m_data_in;
 
-    /// Temporary payload to not destroy the already encoded payloads
-    /// when decoding
-    std::vector<uint8_t> m_temp_payload;
+    /// The output data
+    std::vector<uint8_t> m_data_out;
 
     /// Storage for encoded symbols
-    std::vector< std::vector<uint8_t> > m_payloads;
+    std::vector<std::vector<uint8_t>> m_payloads;
 
     /// Multiplication factor for payload_count
     uint32_t m_factor;
@@ -453,7 +480,7 @@ BENCHMARK_OPTION(throughput_options)
 typedef throughput_benchmark<reed_sol_van_encoder, reed_sol_van_decoder>
     reed_sol_van_throughput;
 
-BENCHMARK_F(reed_sol_van_throughput, Jerasure, ReedSolVan, 5)
+BENCHMARK_F(reed_sol_van_throughput, Jerasure, ReedSolVan, 1)
 {
     run_benchmark();
 }

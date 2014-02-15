@@ -8,3 +8,12 @@ bld.program(
     use      = ['jerasure', 'gf_complete',
                 'boost_includes', 'boost_system', 'boost_timer',
                 'boost_chrono', 'gauge'])
+
+
+bld.program(
+    features = 'c test benchmark',
+    source   = ['encoder.c'],
+    target   = 'jerasure_encoder',
+    use      = ['jerasure', 'gf_complete',
+                'boost_includes', 'boost_system', 'boost_timer',
+                'boost_chrono', 'gauge'])

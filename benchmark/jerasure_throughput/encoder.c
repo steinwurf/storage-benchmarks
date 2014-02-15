@@ -403,7 +403,11 @@ int main (int argc, char **argv)
         if (coding[i] == NULL) { perror("malloc"); exit(1); }
     }
 
-
+    printf("Parameters:\n");
+    printf("k: %d m: %d w: %d\n", k, m, w);
+    printf("file_size: %d\n", buffersize);
+    printf("symbol_size: %d\n", blocksize);
+    printf("readins: %d\n", readins);
 
     /* Create coding matrix or bitmatrix and schedule */
     gettimeofday(&t3, &tz);
@@ -575,8 +579,9 @@ int main (int argc, char **argv)
     tsec /= 1000000.0;
     tsec += t2.tv_sec;
     tsec -= t1.tv_sec;
-    printf("Encoding (MB/sec): %0.10f\n", (((double) size)/1024.0/1024.0)/totalsec);
-    printf("En_Total (MB/sec): %0.10f\n", (((double) size)/1024.0/1024.0)/tsec);
+    // Use real megabytes here!
+    printf("Encoding (MB/sec): %0.10f\n", (((double) size)/1000000.0)/totalsec);
+    printf("En_Total (MB/sec): %0.10f\n", (((double) size)/1000000.0)/tsec);
 }
 
 /* is_prime returns 1 if number if prime, 0 if not prime */
