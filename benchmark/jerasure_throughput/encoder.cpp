@@ -94,8 +94,8 @@ int main (int argc, char **argv)
     //struct timeval t1, t2, t3, t4;
     double t1, t2, t3, t4;
     //struct timezone tz;
-    double total_time;
-    double coding_time;
+    double total_time = 0.0;
+    double coding_time = 0.0;
     //struct timeval start, stop;
     PXTimer timer;
 
@@ -521,6 +521,7 @@ int main (int argc, char **argv)
         }
         //gettimeofday(&t4, &tz);
         t4 = timer.get();
+        //coding_time += (t4-t3);
 
         /* Write data and encoded data to k+m files */
         for	(i = 1; i <= k; i++) {
@@ -562,7 +563,7 @@ int main (int argc, char **argv)
 //         tsec /= 1000000.0;
 //         tsec += t4.tv_sec;
 //         tsec -= t3.tv_sec;
-        coding_time += (t4-t3);
+
     }
 
     /* Create metadata file */

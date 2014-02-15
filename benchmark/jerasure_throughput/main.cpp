@@ -360,8 +360,8 @@ struct throughput_benchmark : public gauge::time_benchmark
         {
             // We have to make sure the encoder is in a "clean" state
             m_encoder->initialize();
-            encode_payloads();
         }
+        encode_payloads();
     }
 
     /// Run the decoder
