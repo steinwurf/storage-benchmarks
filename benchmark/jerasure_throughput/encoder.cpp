@@ -19,6 +19,8 @@ is the file name with "_k#" or "_m#" and then the extension.
 #include <signal.h>
 #include <unistd.h>
 
+#include "PXTimer.h"
+
 extern "C"
 {
 #include "gf_rand.h"
@@ -89,11 +91,13 @@ int main (int argc, char **argv)
     char *curdir;
 
     /* Timing variables */
-    struct timeval t1, t2, t3, t4;
-    struct timezone tz;
-    double tsec;
+    //struct timeval t1, t2, t3, t4;
+    double t1, t2, t3, t4;
+    //struct timezone tz;
+    double total_time;
     double coding_time;
-    struct timeval start, stop;
+    //struct timeval start, stop;
+    PXTimer timer;
 
     /* Find buffersize */
     int up, down;
@@ -102,7 +106,8 @@ int main (int argc, char **argv)
     signal(SIGQUIT, ctrl_bs_handler);
 
     /* Start timing */
-    gettimeofday(&t1, &tz);
+    t1 = timer.get();
+    //gettimeofday(&t1, &tz);
     coding_time = 0.0;
     matrix = NULL;
     bitmatrix = NULL;
@@ -415,7 +420,8 @@ int main (int argc, char **argv)
     printf("readins: %d\n", readins);
 
     /* Create coding matrix or bitmatrix and schedule */
-    gettimeofday(&t3, &tz);
+    //gettimeofday(&t3, &tz);
+    t3 = timer.get();
     switch(tech) {
     case No_Coding:
         break;
@@ -445,15 +451,16 @@ int main (int argc, char **argv)
         schedule = jerasure_smart_bitmatrix_to_schedule(k, m, w, bitmatrix);
         break;
     }
-    gettimeofday(&start, &tz);
-    gettimeofday(&t4, &tz);
-    tsec = 0.0;
-    tsec += t4.tv_usec;
-    tsec -= t3.tv_usec;
-    tsec /= 1000000.0;
-    tsec += t4.tv_sec;
-    tsec -= t3.tv_sec;
-    coding_time += tsec;
+    //gettimeofday(&start, &tz);
+    //gettimeofday(&t4, &tz);
+    t4 = timer.get();
+//     tsec = 0.0;
+//     tsec += t4.tv_usec;
+//     tsec -= t3.tv_usec;
+//     tsec /= 1000000.0;
+//     tsec += t4.tv_sec;
+//     tsec -= t3.tv_sec;
+    coding_time += (t4-t3);
 
 
 
@@ -484,7 +491,8 @@ int main (int argc, char **argv)
             data[i] = block+(i*blocksize);
         }
 
-        gettimeofday(&t3, &tz);
+        //gettimeofday(&t3, &tz);
+        t3 = timer.get();
         /* Encode according to coding method */
         switch(tech) {
         case No_Coding:
@@ -511,7 +519,8 @@ int main (int argc, char **argv)
             jerasure_schedule_encode(k, m, w, schedule, data, coding, blocksize, packetsize);
             break;
         }
-        gettimeofday(&t4, &tz);
+        //gettimeofday(&t4, &tz);
+        t4 = timer.get();
 
         /* Write data and encoded data to k+m files */
         for	(i = 1; i <= k; i++) {
@@ -547,13 +556,13 @@ int main (int argc, char **argv)
         }
         n++;
         /* Calculate encoding time */
-        tsec = 0.0;
-        tsec += t4.tv_usec;
-        tsec -= t3.tv_usec;
-        tsec /= 1000000.0;
-        tsec += t4.tv_sec;
-        tsec -= t3.tv_sec;
-        coding_time += tsec;
+//         tsec = 0.0;
+//         tsec += t4.tv_usec;
+//         tsec -= t3.tv_usec;
+//         tsec /= 1000000.0;
+//         tsec += t4.tv_sec;
+//         tsec -= t3.tv_sec;
+        coding_time += (t4-t3);
     }
 
     /* Create metadata file */
@@ -577,17 +586,19 @@ int main (int argc, char **argv)
     free(curdir);
 
     /* Calculate rate in MB/sec and print */
-    gettimeofday(&t2, &tz);
-    tsec = 0.0;
-    tsec += t2.tv_usec;
-    tsec -= t1.tv_usec;
-    tsec /= 1000000.0;
-    tsec += t2.tv_sec;
-    tsec -= t1.tv_sec;
+    //gettimeofday(&t2, &tz);
+    t2 = timer.get();
+    total_time = t2 - t1;
+//     total_time = 0.0;
+//     total_time += t2.tv_usec;
+//     total_time -= t1.tv_usec;
+//     total_time /= 1000000.0;
+//     total_time += t2.tv_sec;
+//     total_time -= t1.tv_sec;
     // Use real megabytes here!
     printf("Coding time: %.3f us\n", coding_time * 1000000.0);
     printf("Encoding (MB/sec): %0.10f\n", (size/1000000.0)/coding_time);
-    printf("En_Total (MB/sec): %0.10f\n", (size/1000000.0)/tsec);
+    printf("En_Total (MB/sec): %0.10f\n", (size/1000000.0)/total_time);
 }
 
 /* is_prime returns 1 if number if prime, 0 if not prime */

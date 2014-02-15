@@ -12,7 +12,7 @@ bld.program(
 
 bld.program(
     features = 'cxx benchmark',
-    source   = ['encoder.cpp'],
+    source   = ['encoder.cpp', 'PXTimer.cpp'],
     target   = 'jerasure_encoder',
     use      = ['jerasure', 'gf_complete',
                 'boost_includes', 'boost_system', 'boost_timer',
