@@ -19,7 +19,9 @@ is the file name with "_k#" or "_m#" and then the extension.
 #include <signal.h>
 #include <unistd.h>
 
-#include "PXTimer.h"
+#include <boost/chrono.hpp>
+
+namespace bc = boost::chrono;
 
 extern "C"
 {
@@ -31,6 +33,12 @@ extern "C"
 }
 
 #define N 10
+
+double get_micro(bc::high_resolution_clock::duration delta)
+{
+    return (double)bc::duration_cast<bc::microseconds>(delta).count();
+}
+
 
 enum Coding_Technique {Reed_Sol_Van, Reed_Sol_R6_Op, Cauchy_Orig,
     Cauchy_Good, Liberation, Blaum_Roth, Liber8tion, RDP, EVENODD, No_Coding};
@@ -48,8 +56,6 @@ void ctrl_bs_handler(int dummy);
 
 int jfread(void *ptr, int size, int nmembers, FILE *stream)
 {
-    int nd;
-    int *li, i;
     if (stream != NULL) return fread(ptr, size, nmembers, stream);
 
     MOA_Fill_Random_Region(ptr, size);
@@ -60,16 +66,14 @@ int jfread(void *ptr, int size, int nmembers, FILE *stream)
 int main (int argc, char **argv)
 {
     FILE *fp, *fp2;				// file pointers
-    char *memblock;				// reading in file
     char *block;				// padding file
     int size, newsize;			// size of file and temp size
     struct stat status;			// finding file size
 
-
     enum Coding_Technique tech;		// coding technique (parameter)
     int k, m, w, packetsize;		// parameters
     int buffersize;					// paramter
-    int i, j;						// loop control variables
+    int i;  						// loop control variables
     int blocksize;					// size of k+m files
     int total;
     int extra;
@@ -80,8 +84,6 @@ int main (int argc, char **argv)
     int *matrix;
     int *bitmatrix;
     int **schedule;
-    int *erasure;
-    int *erased;
 
     /* Creation of file name variables */
     char temp[5];
@@ -92,12 +94,13 @@ int main (int argc, char **argv)
 
     /* Timing variables */
     //struct timeval t1, t2, t3, t4;
-    double t1, t2, t3, t4;
+    //double t1, t2, t3, t4;
+    bc::high_resolution_clock::time_point t1, t2, t3, t4;
     //struct timezone tz;
     double total_time = 0.0;
     double coding_time = 0.0;
     //struct timeval start, stop;
-    PXTimer timer;
+    //PXTimer timer;
 
     /* Find buffersize */
     int up, down;
@@ -106,7 +109,7 @@ int main (int argc, char **argv)
     signal(SIGQUIT, ctrl_bs_handler);
 
     /* Start timing */
-    t1 = timer.get();
+    t1 = bc::high_resolution_clock::now();
     //gettimeofday(&t1, &tz);
     coding_time = 0.0;
     matrix = NULL;
@@ -421,7 +424,7 @@ int main (int argc, char **argv)
 
     /* Create coding matrix or bitmatrix and schedule */
     //gettimeofday(&t3, &tz);
-    t3 = timer.get();
+    t3 = bc::high_resolution_clock::now();
     matrix = reed_sol_vandermonde_coding_matrix(k, m, w);
 //     switch(tech) {
 //     case No_Coding:
@@ -454,14 +457,14 @@ int main (int argc, char **argv)
 //     }
     //gettimeofday(&start, &tz);
     //gettimeofday(&t4, &tz);
-    t4 = timer.get();
+    t4 = bc::high_resolution_clock::now();
 //     tsec = 0.0;
 //     tsec += t4.tv_usec;
 //     tsec -= t3.tv_usec;
 //     tsec /= 1000000.0;
 //     tsec += t4.tv_sec;
 //     tsec -= t3.tv_sec;
-    coding_time += (t4-t3);
+    coding_time += get_micro(t4-t3);
 
 
 
@@ -493,7 +496,7 @@ int main (int argc, char **argv)
         }
 
         //gettimeofday(&t3, &tz);
-        t3 = timer.get();
+        t3 = bc::high_resolution_clock::now();
         /* Encode according to coding method */
         switch(tech) {
         case No_Coding:
@@ -521,8 +524,8 @@ int main (int argc, char **argv)
             break;
         }
         //gettimeofday(&t4, &tz);
-        t4 = timer.get();
-        //coding_time += (t4-t3);
+        t4 = bc::high_resolution_clock::now();
+        //coding_time += get_micro(t4-t3);
 
         /* Write data and encoded data to k+m files */
         for	(i = 1; i <= k; i++) {
@@ -589,8 +592,8 @@ int main (int argc, char **argv)
 
     /* Calculate rate in MB/sec and print */
     //gettimeofday(&t2, &tz);
-    t2 = timer.get();
-    total_time = t2 - t1;
+    t2 = bc::high_resolution_clock::now();
+    total_time = get_micro(t2 - t1);
 //     total_time = 0.0;
 //     total_time += t2.tv_usec;
 //     total_time -= t1.tv_usec;
@@ -599,6 +602,7 @@ int main (int argc, char **argv)
 //     total_time -= t1.tv_sec;
     // Use real megabytes here!
     printf("Coding time: %.3f us\n", coding_time * 1000000.0);
+    printf("Total time:  %.3f us\n", total_time * 1000000.0);
     printf("Encoding (MB/sec): %0.10f\n", (size/1000000.0)/coding_time);
     printf("En_Total (MB/sec): %0.10f\n", (size/1000000.0)/total_time);
 }
