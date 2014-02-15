@@ -511,13 +511,16 @@ double get_micro(bc::high_resolution_clock::duration delta)
 
 int main(int argc, const char* argv[])
 {
-    bc::high_resolution_clock::time_point t1, t2;
-    t1 = bc::high_resolution_clock::now();
-    int* matrix = reed_sol_vandermonde_coding_matrix(16, 16, 8);
-    t2 = bc::high_resolution_clock::now();
-    double matrix_time = get_micro(t2 - t1);
-    printf("Matrix time:  %.3f us\n", matrix_time);
-    if (matrix) { free(matrix); matrix = 0; }
+    for (uint32_t i = 0; i < 500; i++)
+    {
+        bc::high_resolution_clock::time_point t1, t2;
+        t1 = bc::high_resolution_clock::now();
+        int* matrix = reed_sol_vandermonde_coding_matrix(16, 16, 8);
+        t2 = bc::high_resolution_clock::now();
+        double matrix_time = get_micro(t2 - t1);
+        printf("Matrix time:  %.3f us\n", matrix_time);
+        if (matrix) { free(matrix); matrix = 0; }
+    }
 
     srand(static_cast<uint32_t>(time(0)));
 
