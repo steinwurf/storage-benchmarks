@@ -17,11 +17,16 @@ is the file name with "_k#" or "_m#" and then the extension.
 #include <stdlib.h>
 #include <errno.h>
 #include <signal.h>
-#include <gf_rand.h>
+#include <unistd.h>
+
+extern "C"
+{
+#include "gf_rand.h"
 #include "jerasure.h"
 #include "reed_sol.h"
 #include "cauchy.h"
 #include "liberation.h"
+}
 
 #define N 10
 
@@ -87,7 +92,7 @@ int main (int argc, char **argv)
     struct timeval t1, t2, t3, t4;
     struct timezone tz;
     double tsec;
-    double totalsec;
+    double coding_time;
     struct timeval start, stop;
 
     /* Find buffersize */
@@ -98,7 +103,7 @@ int main (int argc, char **argv)
 
     /* Start timing */
     gettimeofday(&t1, &tz);
-    totalsec = 0.0;
+    coding_time = 0.0;
     matrix = NULL;
     bitmatrix = NULL;
     schedule = NULL;
@@ -448,7 +453,7 @@ int main (int argc, char **argv)
     tsec /= 1000000.0;
     tsec += t4.tv_sec;
     tsec -= t3.tv_sec;
-    totalsec += tsec;
+    coding_time += tsec;
 
 
 
@@ -548,7 +553,7 @@ int main (int argc, char **argv)
         tsec /= 1000000.0;
         tsec += t4.tv_sec;
         tsec -= t3.tv_sec;
-        totalsec += tsec;
+        coding_time += tsec;
     }
 
     /* Create metadata file */
@@ -580,8 +585,9 @@ int main (int argc, char **argv)
     tsec += t2.tv_sec;
     tsec -= t1.tv_sec;
     // Use real megabytes here!
-    printf("Encoding (MB/sec): %0.10f\n", (((double) size)/1000000.0)/totalsec);
-    printf("En_Total (MB/sec): %0.10f\n", (((double) size)/1000000.0)/tsec);
+    printf("Coding time: %.3f us\n", coding_time * 1000000.0);
+    printf("Encoding (MB/sec): %0.10f\n", (size/1000000.0)/coding_time);
+    printf("En_Total (MB/sec): %0.10f\n", (size/1000000.0)/tsec);
 }
 
 /* is_prime returns 1 if number if prime, 0 if not prime */

@@ -5,6 +5,7 @@
 
 #include <ctime>
 #include <cstdint>
+#include <cstdio>
 
 //#include <boost/make_shared.hpp>
 
@@ -211,6 +212,8 @@ struct throughput_benchmark : public gauge::time_benchmark
     {
         // Get the time spent per iteration
         double time = gauge::time_benchmark::measurement();
+
+        printf("Coding time: %.3f us\n", time);
 
         gauge::config_set cs = get_current_configuration();
         std::string type = cs.get_value<std::string>("type");
