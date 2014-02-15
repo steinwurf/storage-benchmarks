@@ -488,12 +488,29 @@ BENCHMARK_F(reed_sol_van_throughput, Jerasure, ReedSolVan, 5)
     run_benchmark();
 }
 
+#include <boost/chrono.hpp>
+
+namespace bc = boost::chrono;
+
+double get_micro(bc::high_resolution_clock::duration delta)
+{
+    return (double)bc::duration_cast<bc::microseconds>(delta).count();
+}
+
 int main(int argc, const char* argv[])
 {
-    srand(static_cast<uint32_t>(time(0)));
+    bc::high_resolution_clock::time_point t1, t2;
+    t1 = bc::high_resolution_clock::now();
+    int* matrix = reed_sol_vandermonde_coding_matrix(16, 16, 8);
+    t2 = bc::high_resolution_clock::now();
+    double matrix_time = get_micro(t2 - t1);
+    printf("Matrix time:  %.3f us\n", matrix_time);
+    if (matrix) { free(matrix); matrix = 0; }
 
-    gauge::runner::add_default_printers();
-    gauge::runner::run_benchmarks(argc, argv);
+//     srand(static_cast<uint32_t>(time(0)));
+//
+//     gauge::runner::add_default_printers();
+//     gauge::runner::run_benchmarks(argc, argv);
 
     return 0;
 }
