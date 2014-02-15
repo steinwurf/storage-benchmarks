@@ -42,7 +42,7 @@ struct reed_sol_van_encoder
     {
         if (data) delete[] data;
         if (coding) delete[] coding;
-        // matrix was allocated by
+        // matrix was allocated with malloc by jerasure: deallocate with free!
         if (matrix) { free(matrix); matrix = 0; }
     }
 
@@ -64,6 +64,7 @@ struct reed_sol_van_encoder
 
     void encode_all(std::vector<std::vector<uint8_t>>& payloads)
     {
+        assert(matrix != 0);
         uint32_t payload_count = payloads.size();
         assert(payload_count == (uint32_t)m);
 
@@ -332,6 +333,7 @@ struct throughput_benchmark : public gauge::time_benchmark
     void run_decode()
     {
         // Encode some data
+        m_encoder->initialize();
         encode_payloads();
 
         // The clock is running
@@ -339,7 +341,7 @@ struct throughput_benchmark : public gauge::time_benchmark
         {
             // We have to make sure the decoder is in a "clean" state
             // i.e. no symbols already decoded.
-            //m_decoder->initialize(*m_decoder_factory);
+            //m_decoder->initialize();
 
             // Decode the payloads
             decode_payloads();
