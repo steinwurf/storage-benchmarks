@@ -483,10 +483,21 @@ BENCHMARK_OPTION(throughput_options)
 typedef throughput_benchmark<reed_sol_van_encoder, reed_sol_van_decoder>
     reed_sol_van_throughput;
 
-BENCHMARK_F(reed_sol_van_throughput, Jerasure, ReedSolVan, 5)
+// BENCHMARK_F(reed_sol_van_throughput, Jerasure, ReedSolVan, 5)
+// {
+//     run_benchmark();
+// }
+
+BENCHMARK_F(gauge::time_benchmark, Jerasure, Matrix, 1)
 {
-    run_benchmark();
+    int* matrix = 0;
+    RUN
+    {
+        matrix = reed_sol_vandermonde_coding_matrix(16, 16, 8);
+    }
+    if (matrix) { free(matrix); matrix = 0; }
 }
+
 
 #include <boost/chrono.hpp>
 
@@ -507,10 +518,10 @@ int main(int argc, const char* argv[])
     printf("Matrix time:  %.3f us\n", matrix_time);
     if (matrix) { free(matrix); matrix = 0; }
 
-//     srand(static_cast<uint32_t>(time(0)));
-//
-//     gauge::runner::add_default_printers();
-//     gauge::runner::run_benchmarks(argc, argv);
+    srand(static_cast<uint32_t>(time(0)));
+
+    gauge::runner::add_default_printers();
+    gauge::runner::run_benchmarks(argc, argv);
 
     return 0;
 }
