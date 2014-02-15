@@ -26,14 +26,12 @@ extern "C"
 struct reed_sol_van_encoder
 {
     reed_sol_van_encoder(uint32_t symbols, uint32_t symbol_size) :
-        m_symbols(symbols), m_symbol_size(symbol_size)
+        m_symbols(symbols), m_symbol_size(symbol_size), matrix(0)
     {
         k = m_symbols;
         m = m_symbols;
         w = 8;
         m_block_size = m_symbols * m_symbol_size;
-
-        matrix = reed_sol_vandermonde_coding_matrix(k, m, w);
 
         // Allocate data and coding pointer arrays
         data = new char*[k];
@@ -44,6 +42,14 @@ struct reed_sol_van_encoder
     {
         if (data) delete[] data;
         if (coding) delete[] coding;
+        // matrix was allocated by
+        if (matrix) { free(matrix); matrix = 0; }
+    }
+
+    void initialize()
+    {
+        if (matrix) { free(matrix); matrix = 0; }
+        matrix = reed_sol_vandermonde_coding_matrix(k, m, w);
     }
 
     void set_symbols(uint8_t* ptr, uint32_t size)
@@ -316,6 +322,8 @@ struct throughput_benchmark : public gauge::time_benchmark
         // The clock is running
         RUN
         {
+            // We have to make sure the encoder is in a "clean" state
+            m_encoder->initialize();
             encode_payloads();
         }
     }
