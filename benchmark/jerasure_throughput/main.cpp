@@ -488,15 +488,15 @@ typedef throughput_benchmark<reed_sol_van_encoder, reed_sol_van_decoder>
 //     run_benchmark();
 // }
 
-BENCHMARK(Jerasure, Matrix, 1)
+BENCHMARK(Jerasure, Matrix, 5)
 {
     int* matrix = 0;
     RUN
     {
         matrix = reed_sol_vandermonde_coding_matrix(16, 16, 8);
         assert(matrix);
+        if (matrix) { free(matrix); matrix = 0; }
     }
-    if (matrix) { free(matrix); matrix = 0; }
 }
 
 
@@ -511,7 +511,7 @@ double get_micro(bc::high_resolution_clock::duration delta)
 
 int main(int argc, const char* argv[])
 {
-    for (uint32_t i = 0; i < 500; i++)
+    for (uint32_t i = 0; i < 10; i++)
     {
         bc::high_resolution_clock::time_point t1, t2;
         t1 = bc::high_resolution_clock::now();
