@@ -426,46 +426,41 @@ int main (int argc, char **argv)
     /* Create coding matrix or bitmatrix and schedule */
     //gettimeofday(&t3, &tz);
     t3 = bc::high_resolution_clock::now();
-    matrix = reed_sol_vandermonde_coding_matrix(k, m, w);
-//     switch(tech) {
-//     case No_Coding:
-//         break;
-//     case Reed_Sol_Van:
-//         matrix = reed_sol_vandermonde_coding_matrix(k, m, w);
-//         break;
-//     case Cauchy_Orig:
-//         matrix = cauchy_original_coding_matrix(k, m, w);
-//         bitmatrix = jerasure_matrix_to_bitmatrix(k, m, w, matrix);
-//         schedule = jerasure_smart_bitmatrix_to_schedule(k, m, w, bitmatrix);
-//         break;
-//     case Cauchy_Good:
-//         matrix = cauchy_good_general_coding_matrix(k, m, w);
-//         bitmatrix = jerasure_matrix_to_bitmatrix(k, m, w, matrix);
-//         schedule = jerasure_smart_bitmatrix_to_schedule(k, m, w, bitmatrix);
-//         break;
-//     case Liberation:
-//         bitmatrix = liberation_coding_bitmatrix(k, w);
-//         schedule = jerasure_smart_bitmatrix_to_schedule(k, m, w, bitmatrix);
-//         break;
-//     case Blaum_Roth:
-//         bitmatrix = blaum_roth_coding_bitmatrix(k, w);
-//         schedule = jerasure_smart_bitmatrix_to_schedule(k, m, w, bitmatrix);
-//         break;
-//     case Liber8tion:
-//         bitmatrix = liber8tion_coding_bitmatrix(k);
-//         schedule = jerasure_smart_bitmatrix_to_schedule(k, m, w, bitmatrix);
-//         break;
-//     }
+
+    switch(tech) {
+    case No_Coding:
+        break;
+    case Reed_Sol_Van:
+        matrix = reed_sol_vandermonde_coding_matrix(k, m, w);
+        break;
+    case Cauchy_Orig:
+        matrix = cauchy_original_coding_matrix(k, m, w);
+        bitmatrix = jerasure_matrix_to_bitmatrix(k, m, w, matrix);
+        schedule = jerasure_smart_bitmatrix_to_schedule(k, m, w, bitmatrix);
+        break;
+    case Cauchy_Good:
+        matrix = cauchy_good_general_coding_matrix(k, m, w);
+        bitmatrix = jerasure_matrix_to_bitmatrix(k, m, w, matrix);
+        schedule = jerasure_smart_bitmatrix_to_schedule(k, m, w, bitmatrix);
+        break;
+    case Liberation:
+        bitmatrix = liberation_coding_bitmatrix(k, w);
+        schedule = jerasure_smart_bitmatrix_to_schedule(k, m, w, bitmatrix);
+        break;
+    case Blaum_Roth:
+        bitmatrix = blaum_roth_coding_bitmatrix(k, w);
+        schedule = jerasure_smart_bitmatrix_to_schedule(k, m, w, bitmatrix);
+        break;
+    case Liber8tion:
+        bitmatrix = liber8tion_coding_bitmatrix(k);
+        schedule = jerasure_smart_bitmatrix_to_schedule(k, m, w, bitmatrix);
+        break;
+    }
 
     //gettimeofday(&t4, &tz);
     t4 = bc::high_resolution_clock::now();
-//     tsec = 0.0;
-//     tsec += t4.tv_usec;
-//     tsec -= t3.tv_usec;
-//     tsec /= 1000000.0;
-//     tsec += t4.tv_sec;
-//     tsec -= t3.tv_sec;
-    //coding_time += get_micro(t4-t3);
+
+    coding_time += get_micro(t4-t3);
 
 
     /// The input data
@@ -491,6 +486,10 @@ int main (int argc, char **argv)
         m_payloads[i].resize(blocksize);
     }
 
+    for (i = 0; i < m; i++)
+    {
+        coding[i] = (char*)&(m_payloads[i][0]);
+    }
 
     /* Read in data until finished */
     n = 1;
@@ -523,11 +522,6 @@ int main (int argc, char **argv)
         for (i = 0; i < k; i++)
         {
             data[i] = (char*)&m_data_in[i * blocksize];
-        }
-
-        for (i = 0; i < m; i++)
-        {
-            coding[i] = (char*)&(m_payloads[i][0]);
         }
 
         //gettimeofday(&t3, &tz);
@@ -594,15 +588,8 @@ int main (int argc, char **argv)
                 fclose(fp2);
             }
         }
-        n++;
-        /* Calculate encoding time */
-//         tsec = 0.0;
-//         tsec += t4.tv_usec;
-//         tsec -= t3.tv_usec;
-//         tsec /= 1000000.0;
-//         tsec += t4.tv_sec;
-//         tsec -= t3.tv_sec;
 
+        n++;
     }
 
     /* Create metadata file */
@@ -629,12 +616,7 @@ int main (int argc, char **argv)
     //gettimeofday(&t2, &tz);
     t2 = bc::high_resolution_clock::now();
     total_time = get_micro(t2 - t1);
-//     total_time = 0.0;
-//     total_time += t2.tv_usec;
-//     total_time -= t1.tv_usec;
-//     total_time /= 1000000.0;
-//     total_time += t2.tv_sec;
-//     total_time -= t1.tv_sec;
+
     // Use real megabytes here!
     printf("Coding time: %.3f us\n", coding_time);
     printf("Total time:  %.3f us\n", total_time);

@@ -361,13 +361,11 @@ struct throughput_benchmark : public gauge::time_benchmark
     /// Run the encoder
     void run_encode()
     {
-        // We have to make sure the encoder is in a "clean" state
-        m_encoder->initialize();
-
         // The clock is running
         RUN
         {
-
+            // We have to make sure the encoder is in a "clean" state
+            m_encoder->initialize();
             encode_payloads();
         }
     }
@@ -466,7 +464,7 @@ BENCHMARK_OPTION(throughput_options)
 
     std::vector<std::string> types;
     types.push_back("encoder");
-    //types.push_back("decoder");
+    types.push_back("decoder");
 
     auto default_types =
         gauge::po::value<std::vector<std::string> >()->default_value(
