@@ -361,11 +361,12 @@ struct throughput_benchmark : public gauge::time_benchmark
     /// Run the encoder
     void run_encode()
     {
+        // We have to make sure the encoder is in a "clean" state
+        m_encoder->initialize();
+
         // The clock is running
         RUN
         {
-            // We have to make sure the encoder is in a "clean" state
-            m_encoder->initialize();
             encode_payloads();
         }
     }
@@ -377,11 +378,12 @@ struct throughput_benchmark : public gauge::time_benchmark
         m_encoder->initialize();
         encode_payloads();
 
+        // We have to make sure the decoder is in a "clean" state
+        m_decoder->initialize();
+
         // The clock is running
         RUN
         {
-            // We have to make sure the decoder is in a "clean" state
-            m_decoder->initialize();
             // Decode the payloads
             decode_payloads();
         }
