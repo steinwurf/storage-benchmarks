@@ -64,6 +64,11 @@ def configure(conf):
         recurse_helper(conf, 'tables')
 
     set_simd_flags(conf)
+    conf.load('asm')
+    conf.find_program(['yasm'], var='AS')
+    conf.env.AS_TGT_F = ['-o']
+    conf.env.ASLNK_TGT_F = ['-o']
+
 
 def set_simd_flags(conf):
     """
@@ -97,6 +102,32 @@ def set_simd_flags(conf):
     conf.env['CXXFLAGS_SIMD_SHARED'] = flags
     conf.env['DEFINES_SIMD_SHARED'] = defines
 
+def get_asmformat(bld):
+
+    if bld.get_mkspec_platform() == 'linux':
+        if bld.env['DEST_CPU'] == 'x86':
+            return ['-felf32']
+        else:
+            return ['-felf64']
+
+    elif bld.get_mkspec_platform() == 'mac':
+        if bld.env['DEST_CPU'] == 'x86_64':
+            return ['-fmacho64']
+
+    elif bld.get_mkspec_platform() == 'windows':
+        if bld.env['DEST_CPU'] == 'x86':
+            return ['-fwin32']
+        else:
+            return ['-fwin64']
+
+    elif bld.get_mkspec_platform() == 'android':
+        if bld.env['DEST_CPU'] == 'arm':
+            return ['--defsym','ARCHITECTURE=5','-march=armv5te']
+
+    # If we get to this point then no asmformat was selected
+    raise ValueError("Unknown platform/CPU combination: "
+                     +bld.get_mkspec_platform()+" / "+bld.env['DEST_CPU'])
+
 def build(bld):
 
     if '-O2' in bld.env['CFLAGS']:
@@ -119,6 +150,15 @@ def build(bld):
           export_includes = ['jerasure/include'],
           use             = ['SIMD_SHARED', 'gf_complete'])
 
+    bld.stlib(
+          features        = 'c asm',
+          source          = bld.path.ant_glob('isa-l_open_src_2.8/isa/*.c') +
+                            bld.path.ant_glob('isa-l_open_src_2.8/isa/*.asm'),
+          target          = 'isa',
+          asflags         = get_asmformat(bld),
+          includes        = ['isa-l_open_src_2.8/isa'],
+          export_includes = ['isa-l_open_src_2.8/isa'])
+
     if bld.is_toplevel():
 
         bld.load('wurf_dependency_bundle')
@@ -132,6 +172,7 @@ def build(bld):
         # in a recurse call
 
         bld.recurse('benchmark/jerasure_throughput')
+        bld.recurse('benchmark/isa_throughput')
 
 
 
