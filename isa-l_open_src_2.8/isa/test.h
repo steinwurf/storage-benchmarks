@@ -2,7 +2,7 @@
   Copyright(c) 2011-2013 Intel Corporation All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions 
+  modification, are permitted provided that the following conditions
   are met:
     * Redistributions of source code must retain the above copyright
       notice, this list of conditions and the following disclaimer.
@@ -61,10 +61,10 @@ inline void perf_print(struct perf stop, struct perf start, long long dsize)
 	printf("runtime = %10lld usecs", usecs);
 	if (dsize != 0) {
 #if 1 // not bug in printf for 32-bit
-		printf(", bandwidth %lld MB in %.4f sec = %.2f MB/s\n", dsize/(1024*1024), 
+		printf(", bandwidth %lld MB in %.4f sec = %.2f MB/s\n", dsize/(1000*1000),
 			((double) usecs)/1000000, ((double) dsize) / (double)usecs);
 #else
-		printf(", bandwidth %lld MB ", dsize/(1024*1024));
+		printf(", bandwidth %lld MB ", dsize/(1000*1000));
 		printf("in %.4f sec ",(double)usecs/1000000);
 		printf("= %.2f MB/s\n", (double)dsize/usecs);
 #endif
