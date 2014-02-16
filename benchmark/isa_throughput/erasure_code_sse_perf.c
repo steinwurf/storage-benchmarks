@@ -45,9 +45,9 @@
 # ifndef TEST_CUSTOM
 // Uncached test.  Pull from large mem base.
 #  define TEST_SOURCES 250
-#  define GT_L3_CACHE  32*1024*1024  /* some number > last level cache */
-#  define TEST_LEN(m)  ((GT_L3_CACHE / m) & ~(64-1))
-#  define TEST_LOOPS(m)   (10*m)
+#  define GT_L3_CACHE  1000*1000  /* some number > last level cache */
+#  define TEST_LEN(m)  ((GT_L3_CACHE) & ~(64-1))
+#  define TEST_LOOPS(m) 1
 #  define TEST_TYPE_STR "_cold"
 # else
 #  define TEST_TYPE_STR "_cus"
@@ -108,8 +108,8 @@ int main(int argc, char *argv[])
 	u8 src_err_list[TEST_SOURCES], *recov[TEST_SOURCES];
 	struct perf start, stop;
 
-	m = 16;
-	k = 12;
+	m = 32;
+	k = 16;
 	printf("erasure_code_sse_perf: %dx%d ",
 			m, (TEST_LEN(m)));
 
