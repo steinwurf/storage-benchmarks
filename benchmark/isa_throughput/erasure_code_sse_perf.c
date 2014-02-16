@@ -108,8 +108,8 @@ int main(int argc, char *argv[])
 	u8 src_err_list[TEST_SOURCES], *recov[TEST_SOURCES];
 	struct perf start, stop;
 
-	m = 32;
-	k = 28;
+	m = 16;
+	k = 12;
 	printf("erasure_code_sse_perf: %dx%d ",
 			m, (TEST_LEN(m)));
 
