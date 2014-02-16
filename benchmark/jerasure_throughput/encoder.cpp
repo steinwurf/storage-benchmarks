@@ -455,7 +455,7 @@ int main (int argc, char **argv)
 //         schedule = jerasure_smart_bitmatrix_to_schedule(k, m, w, bitmatrix);
 //         break;
 //     }
-    //gettimeofday(&start, &tz);
+
     //gettimeofday(&t4, &tz);
     t4 = bc::high_resolution_clock::now();
 //     tsec = 0.0;
@@ -464,7 +464,7 @@ int main (int argc, char **argv)
 //     tsec /= 1000000.0;
 //     tsec += t4.tv_sec;
 //     tsec -= t3.tv_sec;
-    coding_time += get_micro(t4-t3);
+    //coding_time += get_micro(t4-t3);
 
 
 
@@ -525,7 +525,7 @@ int main (int argc, char **argv)
         }
         //gettimeofday(&t4, &tz);
         t4 = bc::high_resolution_clock::now();
-        //coding_time += get_micro(t4-t3);
+        coding_time += get_micro(t4-t3);
 
         /* Write data and encoded data to k+m files */
         for	(i = 1; i <= k; i++) {
