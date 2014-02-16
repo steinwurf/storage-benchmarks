@@ -19,6 +19,7 @@ is the file name with "_k#" or "_m#" and then the extension.
 #include <signal.h>
 #include <unistd.h>
 
+#include <vector>
 #include <boost/chrono.hpp>
 
 namespace bc = boost::chrono;
@@ -411,10 +412,10 @@ int main (int argc, char **argv)
     /* Allocate data and coding */
     data = (char **)malloc(sizeof(char*)*k);
     coding = (char **)malloc(sizeof(char*)*m);
-    for (i = 0; i < m; i++) {
-        coding[i] = (char *)malloc(sizeof(char)*blocksize);
-        if (coding[i] == NULL) { perror("malloc"); exit(1); }
-    }
+//     for (i = 0; i < m; i++) {
+//         coding[i] = (char *)malloc(sizeof(char)*blocksize);
+//         if (coding[i] == NULL) { perror("malloc"); exit(1); }
+//     }
 
     printf("Parameters:\n");
     printf("k: %d m: %d w: %d\n", k, m, w);
@@ -467,6 +468,29 @@ int main (int argc, char **argv)
     //coding_time += get_micro(t4-t3);
 
 
+    /// The input data
+    std::vector<uint8_t> m_data_in;
+
+    /// Storage for encoded symbols
+    std::vector<std::vector<uint8_t>> m_payloads;
+
+    // Prepare the data to be encoded
+    m_data_in.resize(buffersize);
+
+    for (uint8_t &e : m_data_in)
+    {
+        e = rand() % 256;
+    }
+
+    // Prepare storage to the encoded payloads
+    uint32_t payload_count = m;
+
+    m_payloads.resize(payload_count);
+    for (uint32_t i = 0; i < payload_count; ++i)
+    {
+        m_payloads[i].resize(blocksize);
+    }
+
 
     /* Read in data until finished */
     n = 1;
@@ -491,8 +515,19 @@ int main (int argc, char **argv)
         }
 
         /* Set pointers to point to file data */
-        for (i = 0; i < k; i++) {
-            data[i] = block+(i*blocksize);
+        //for (i = 0; i < k; i++) {
+        //    data[i] = block+(i*blocksize);
+        //}
+
+        // Set pointers to point to the input symbols
+        for (i = 0; i < k; i++)
+        {
+            data[i] = (char*)&m_data_in[i * blocksize];
+        }
+
+        for (i = 0; i < m; i++)
+        {
+            coding[i] = (char*)&(m_payloads[i][0]);
         }
 
         //gettimeofday(&t3, &tz);
