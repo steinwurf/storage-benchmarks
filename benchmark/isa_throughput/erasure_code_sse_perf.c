@@ -2,7 +2,7 @@
   Copyright(c) 2011-2013 Intel Corporation All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions 
+  modification, are permitted provided that the following conditions
   are met:
     * Redistributions of source code must retain the above copyright
       notice, this list of conditions and the following disclaimer.
@@ -27,6 +27,7 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **********************************************************************/
 
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>  // for memset, memcmp
@@ -145,9 +146,9 @@ int main(int argc, char *argv[])
 
 	memset(src_in_err, 0, TEST_SOURCES);
 
-	srand(1);
+	srand(time(0));
 	for (i=0, nerrs=0; i<k && nerrs<m-k; i++){
-		err = 1 & rand();
+		err = rand() % k;
 		src_in_err[i] = err;
 		if (err)
 			src_err_list[nerrs++] = i;
@@ -176,14 +177,14 @@ int main(int argc, char *argv[])
 	perf_stop(&stop);
 	printf("erasure_code_sse_encode" TEST_TYPE_STR ": ");
 	perf_print(stop,start,
-			(long long)(TEST_LEN(m))*(m)*rtest);
+			(long long)(TEST_LEN(m)) * (m-k) * rtest);
 
 	perf_start(&start);
 
 	for (rtest = 0; rtest < TEST_LOOPS(m); rtest++){
 		// Construct b by removing error rows
 		for(i=0, r=0; i<k; i++, r++){
-			while (src_in_err[r]) 
+			while (src_in_err[r])
 				r++;
 			for(j=0; j<k; j++)
 				b[k*i+j] = a[k*r+j];
@@ -195,7 +196,7 @@ int main(int argc, char *argv[])
 		}
 
 		for(i=0, r=0; i<k; i++, r++){
-			while (src_in_err[r]) 
+			while (src_in_err[r])
 				r++;
 			recov[i] = buffs[r];
 		}
@@ -212,21 +213,21 @@ int main(int argc, char *argv[])
 				k, nerrs, g_tbls, recov, &temp_buffs[k]);
 
 	}
-	
+
 	perf_stop(&stop);
 	for(i=0; i<nerrs; i++){
 		if (0 != memcmp(temp_buffs[k+i], buffs[src_err_list[i]],
 				(TEST_LEN(m)))){
-			printf("Fail error recovery (%d, %d, %d) - ", 
+			printf("Fail error recovery (%d, %d, %d) - ",
 				m, k, nerrs);
 			printf(" - erase list = ");
 			for (j=0; j<nerrs; j++)
 				printf(" %d", src_err_list[j]);
-			printf("\na:\n"); 
+			printf("\na:\n");
 			dump_u8xu8((u8*)a, m, k);
 			printf("inv b:\n");
 			dump_u8xu8((u8*)d, k, k);
-			printf("orig data:\n"); 
+			printf("orig data:\n");
 			dump_matrix(buffs, m, 25);
 			printf("orig   :");
 			dump(buffs[src_err_list[i]],25);
@@ -238,7 +239,7 @@ int main(int argc, char *argv[])
 
 	printf("erasure_code_sse_decode" TEST_TYPE_STR ": ");
 	perf_print(stop,start,
-			(long long)(TEST_LEN(m))*(k+nerrs)*rtest);
+			(long long)(TEST_LEN(m)) * nerrs * rtest);
 
 	printf("done all: Pass\n");
 	return 0;
