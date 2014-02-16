@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
 
 	srand(time(0));
 	for (i=0, nerrs=0; i<k && nerrs<m-k; i++){
-		err = rand() % k;
+		err = rand() % 2;
 		src_in_err[i] = err;
 		if (err)
 			src_err_list[nerrs++] = i;
