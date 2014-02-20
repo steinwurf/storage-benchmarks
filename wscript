@@ -63,12 +63,17 @@ def configure(conf):
         recurse_helper(conf, 'gauge')
         recurse_helper(conf, 'tables')
 
+    if conf.is_mkspec_platform('linux'):
+        if not conf.env['LIB_PTHREAD']:
+            conf.check_cxx(lib='pthread')
+        if not conf.env['LIB_M']:
+            conf.check_cc(lib='m')
+
     set_simd_flags(conf)
     conf.load('asm')
     conf.find_program(['yasm'], var='AS')
     conf.env.AS_TGT_F = ['-o']
     conf.env.ASLNK_TGT_F = ['-o']
-
 
 def set_simd_flags(conf):
     """
@@ -159,6 +164,18 @@ def build(bld):
           includes        = ['isa-l_open_src_2.8/isa'],
           export_includes = ['isa-l_open_src_2.8/isa'])
 
+    openfec_flags = ['-O4']
+    bld.env['CFLAGS_OPENFEC_SHARED'] = openfec_flags
+    bld.env['CXXFLAGS_OPENFEC_SHARED'] = openfec_flags
+
+    bld.stlib(
+          features        = 'c',
+          source          = bld.path.ant_glob('openfec-1.3/src/**/*.c'),
+          target          = 'openfec',
+          includes        = ['openfec-1.3/src'],
+          export_includes = ['openfec-1.3/src'],
+          use             = ['OPENFEC_SHARED', 'PTHREAD'])
+
     if bld.is_toplevel():
 
         bld.load('wurf_dependency_bundle')
@@ -173,7 +190,7 @@ def build(bld):
 
         bld.recurse('benchmark/jerasure_throughput')
         bld.recurse('benchmark/isa_throughput')
-
+        bld.recurse('benchmark/openfec_throughput')
 
 
 
