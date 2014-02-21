@@ -147,7 +147,8 @@ UINT32			k_for_this_blk;
  * 	 - pkt/pkt_idx (current location/index of source pkt struct)
  * 	 - fec_pkt/fec_idx (current location/index of fec pkt struct)
  *
- * NB: symbol seq numbers (source block number, or SBN for short, and Encodingsymbol ESI in the block) are different
+ * NB: symbol seq numbers (source block number, or SBN for short, and
+ * Encodingsymbol ESI in the block) are different
  * 	 from the packet indexes.
  */
 char	**orig_symb;
@@ -176,4 +177,3 @@ block_cb_t	*blk_cb_tab;
  * it to the receiver too.
  */
 symbol_cb_t	*symb_cb_tab;
-

@@ -25,8 +25,6 @@ extern "C"
 #define MMAX TEST_SOURCES
 #define KMAX TEST_SOURCES
 
-typedef unsigned char u8;
-
 struct isa_encoder
 {
     isa_encoder(uint32_t symbols, uint32_t symbol_size) :
@@ -288,7 +286,7 @@ BENCHMARK_OPTION(throughput_options)
 }
 
 //------------------------------------------------------------------
-// Reed-Solomon Vandermonde
+// ISA Erasure Code
 //------------------------------------------------------------------
 
 typedef throughput_benchmark<isa_encoder, isa_decoder>

@@ -13,7 +13,7 @@ bld.program(
 bld.program(
     features = 'cxx',
     source   = ['encoder.cpp'],
-    target   = 'jerasure_encoder',
+    target   = 'jerasure_original_encoder',
     use      = ['jerasure', 'gf_complete',
                 'boost_includes', 'boost_system', 'boost_timer',
                 'boost_chrono', 'gauge'])
