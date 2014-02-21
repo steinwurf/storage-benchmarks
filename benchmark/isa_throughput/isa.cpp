@@ -129,17 +129,18 @@ struct isa_decoder
         }
 
         // Simulate m-k erasures (erase all original symbols)
-        nerrs = m - k;
         // No original symbols used during decoding (worst case)
         memset(src_in_err, 0, TEST_SOURCES);
 
-        int nerrs;
-        for (i = 0, nerrs = 0; i < k && nerrs < m - k; i++)
+        int errors;
+        for (i = 0, errors = 0; i < k && errors < m - k; i++)
         {
             int err = 1; //rand() % 2;
             src_in_err[i] = err;
-            if (err) src_err_list[nerrs++] = i;
+            if (err) src_err_list[errors++] = i;
         }
+        nerrs = errors;
+        assert(nerrs == m - k);
 
         gf_gen_rs_matrix(a, m, k);
     }
@@ -156,7 +157,6 @@ struct isa_decoder
     {
         uint32_t payload_count = encoder->payload_count();
         assert(payload_count == (uint32_t)(m - k));
-        int nerrs = m - payload_count;
 
         int i, j, r;
         // Construct b by removing error rows from a
@@ -164,7 +164,7 @@ struct isa_decoder
         for (i = 0, r = 0; i < k; i++, r++)
         {
             while (src_in_err[r]) r++;
-            for(j = 0; j < k; j++)
+            for (j = 0; j < k; j++)
                 b[k*i+j] = a[k*r+j];
         }
 
@@ -180,7 +180,7 @@ struct isa_decoder
         for (i = 0, r = 0; i < k; i++, r++)
         {
             while (src_in_err[r]) r++;
-            recov[i] = encoder->m_buffs[r];
+            data[i] = encoder->m_buffs[r];
         }
 
         // Construct c by copying the erasure rows from the inverse matrix d
@@ -193,7 +193,7 @@ struct isa_decoder
         // Recover data
         ec_init_tables(k, nerrs, c, g_tbls);
         ec_encode_data_sse(m_symbol_size,
-            k, nerrs, g_tbls, recov, &m_buffs[k]);
+            k, nerrs, g_tbls, &data[0], &m_buffs[0]);
         m_decoding_result = 0;
     }
 
@@ -201,9 +201,9 @@ struct isa_decoder
     {
         assert(m_block_size == encoder->block_size());
 
-        for(int i = 0; i < nerrs; i++)
+        for (int i = 0; i < nerrs; i++)
         {
-            if (memcmp(m_buffs[k+i], encoder->m_buffs[src_err_list[i]],
+            if (memcmp(m_buffs[i], encoder->m_buffs[src_err_list[i]],
                 m_symbol_size))
             {
                 return false;
@@ -226,7 +226,7 @@ protected:
     uint8_t g_tbls[KMAX*TEST_SOURCES*32];
     uint8_t src_in_err[TEST_SOURCES];
     uint8_t src_err_list[TEST_SOURCES];
-    uint8_t* recov[TEST_SOURCES];
+    uint8_t* data[TEST_SOURCES];
 
     // Code parameters
     int k, m;
