@@ -47,7 +47,7 @@
 #  define TEST_SOURCES 250
 #  define GT_L3_CACHE  1000*1000  /* some number > last level cache */
 #  define TEST_LEN(m)  ((GT_L3_CACHE) & ~(64-1))
-#  define TEST_LOOPS(m) 1
+#  define TEST_LOOPS(m) 10
 #  define TEST_TYPE_STR "_cold"
 # else
 #  define TEST_TYPE_STR "_cus"
@@ -244,4 +244,3 @@ int main(int argc, char *argv[])
 	printf("done all: Pass\n");
 	return 0;
 }
-

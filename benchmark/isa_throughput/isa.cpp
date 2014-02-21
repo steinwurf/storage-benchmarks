@@ -117,7 +117,7 @@ struct isa_decoder
         m_decoding_result = -1;
 
         // Allocate the arrays
-        int i, j;
+        int i;
         void* buf = 0;
         for (i = 0; i < m; i++)
         {
@@ -165,7 +165,7 @@ struct isa_decoder
         {
             while (src_in_err[r]) r++;
             for (j = 0; j < k; j++)
-                b[k*i+j] = a[k*r+j];
+                b[k * i + j] = a[k * r + j];
         }
 
         // Invert the b matrix into d
@@ -268,7 +268,7 @@ BENCHMARK_OPTION(throughput_options)
         symbol_size, "")->multitoken();
 
     std::vector<std::string> types;
-    types.push_back("encoder");
+    //types.push_back("encoder");
     types.push_back("decoder");
 
     auto default_types =
@@ -294,7 +294,7 @@ BENCHMARK_OPTION(throughput_options)
 typedef throughput_benchmark<isa_encoder, isa_decoder>
     isa_throughput;
 
-BENCHMARK_F(isa_throughput, ISA, ErasureCode, 1)
+BENCHMARK_F(isa_throughput, ISA, ErasureCode, 10)
 {
     run_benchmark();
 }
