@@ -257,23 +257,23 @@ BENCHMARK_OPTION(throughput_options)
 
     auto default_symbols =
         gauge::po::value<std::vector<uint32_t> >()->default_value(
-        symbols, "")->multitoken();
+            symbols, "")->multitoken();
 
-    // Symbol size must be a multiple of 32
+    // Symbol size must be a multiple of 64
     std::vector<uint32_t> symbol_size;
     symbol_size.push_back(1000000);
 
     auto default_symbol_size =
         gauge::po::value<std::vector<uint32_t> >()->default_value(
-        symbol_size, "")->multitoken();
+            symbol_size, "")->multitoken();
 
     std::vector<std::string> types;
-    //types.push_back("encoder");
+    types.push_back("encoder");
     types.push_back("decoder");
 
     auto default_types =
         gauge::po::value<std::vector<std::string> >()->default_value(
-        types, "")->multitoken();
+            types, "")->multitoken();
 
     options.add_options()
         ("symbols", default_symbols, "Set the number of symbols");

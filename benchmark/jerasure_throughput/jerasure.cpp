@@ -266,7 +266,7 @@ BENCHMARK_OPTION(throughput_options)
 typedef throughput_benchmark<reed_sol_van_encoder, reed_sol_van_decoder>
     reed_sol_van_throughput;
 
-BENCHMARK_F(reed_sol_van_throughput, Jerasure, ReedSolVan, 1)
+BENCHMARK_F(reed_sol_van_throughput, Jerasure, ReedSolVan, 10)
 {
     run_benchmark();
 }
