@@ -115,24 +115,100 @@ struct isa_decoder
 
         m_block_size = m_symbols * m_symbol_size;
         m_decoding_result = -1;
+
+        // Allocate the arrays
+        int i, j;
+        void* buf = 0;
+        for (i = 0; i < m; i++)
+        {
+            if (posix_memalign(&buf, 64, m_symbol_size))
+            {
+                printf("alloc error: Fail\n");
+            }
+            m_buffs[i] = (uint8_t*)buf;
+        }
+
+        // Simulate m-k erasures (erase all original symbols)
+        nerrs = m - k;
+        // No original symbols used during decoding (worst case)
+        memset(src_in_err, 0, TEST_SOURCES);
+
+        int nerrs;
+        for (i = 0, nerrs = 0; i < k && nerrs < m - k; i++)
+        {
+            int err = 1; //rand() % 2;
+            src_in_err[i] = err;
+            if (err) src_err_list[nerrs++] = i;
+        }
+
+        gf_gen_rs_matrix(a, m, k);
     }
 
     ~isa_decoder()
     {
+        for (int i = 0; i < m; i++)
+        {
+            free(m_buffs[i]);
+        }
     }
 
     void decode_all(std::shared_ptr<isa_encoder> encoder)
     {
         uint32_t payload_count = encoder->payload_count();
-
         assert(payload_count == (uint32_t)(m - k));
+        int nerrs = m - payload_count;
+
+        int i, j, r;
+        // Construct b by removing error rows from a
+        // a contains m rows and k columns
+        for (i = 0, r = 0; i < k; i++, r++)
+        {
+            while (src_in_err[r]) r++;
+            for(j = 0; j < k; j++)
+                b[k*i+j] = a[k*r+j];
+        }
+
+        // Invert the b matrix into d
+        if (gf_invert_matrix(b, d, k) < 0)
+        {
+            printf("BAD MATRIX\n");
+            m_decoding_result = -1;
+            return;
+        }
+
+        // Set data pointers to point to the encoder payloads
+        for (i = 0, r = 0; i < k; i++, r++)
+        {
+            while (src_in_err[r]) r++;
+            recov[i] = encoder->m_buffs[r];
+        }
+
+        // Construct c by copying the erasure rows from the inverse matrix d
+        for (i = 0; i < nerrs; i++)
+        {
+            for (j = 0; j < k; j++)
+                c[k * i + j] = d[k * src_err_list[i] + j];
+        }
+
+        // Recover data
+        ec_init_tables(k, nerrs, c, g_tbls);
+        ec_encode_data_sse(m_symbol_size,
+            k, nerrs, g_tbls, recov, &m_buffs[k]);
+        m_decoding_result = 0;
     }
 
     bool verify_data(std::shared_ptr<isa_encoder> encoder)
     {
-        //assert(m_data_out.size() == encoder->m_data_in.size());
-        //return std::equal(m_data_out.begin(), m_data_out.end(),
-        //                 encoder->m_data_in.begin());
+        assert(m_block_size == encoder->block_size());
+
+        for(int i = 0; i < nerrs; i++)
+        {
+            if (memcmp(m_buffs[k+i], encoder->m_buffs[src_err_list[i]],
+                m_symbol_size))
+            {
+                return false;
+            }
+        }
 
         return true;
     }
@@ -147,11 +223,15 @@ protected:
 
     uint8_t* m_buffs[TEST_SOURCES];
     uint8_t a[MMAX*KMAX], b[MMAX*KMAX], c[MMAX*KMAX], d[MMAX*KMAX];
-    uint8_t g_tbls[KMAX*TEST_SOURCES*32], src_in_err[TEST_SOURCES];
-    uint8_t src_err_list[TEST_SOURCES], *recov[TEST_SOURCES];
+    uint8_t g_tbls[KMAX*TEST_SOURCES*32];
+    uint8_t src_in_err[TEST_SOURCES];
+    uint8_t src_err_list[TEST_SOURCES];
+    uint8_t* recov[TEST_SOURCES];
 
     // Code parameters
     int k, m;
+    // Number of erasures
+    int nerrs;
 
     // Number of symbols
     uint32_t m_symbols;
@@ -169,15 +249,15 @@ BENCHMARK_OPTION(throughput_options)
 
     std::vector<uint32_t> symbols;
     symbols.push_back(16);
-//     symbols.push_back(32);
-//     symbols.push_back(64);
-//     symbols.push_back(128);
-//     symbols.push_back(256);
-//     symbols.push_back(512);
+    //     symbols.push_back(32);
+    //     symbols.push_back(64);
+    //     symbols.push_back(128);
+    //     symbols.push_back(256);
+    //     symbols.push_back(512);
 
     auto default_symbols =
         gauge::po::value<std::vector<uint32_t> >()->default_value(
-            symbols, "")->multitoken();
+        symbols, "")->multitoken();
 
     // Symbol size must be a multiple of 32
     std::vector<uint32_t> symbol_size;
@@ -185,15 +265,15 @@ BENCHMARK_OPTION(throughput_options)
 
     auto default_symbol_size =
         gauge::po::value<std::vector<uint32_t> >()->default_value(
-            symbol_size, "")->multitoken();
+        symbol_size, "")->multitoken();
 
     std::vector<std::string> types;
     types.push_back("encoder");
-    //types.push_back("decoder");
+    types.push_back("decoder");
 
     auto default_types =
         gauge::po::value<std::vector<std::string> >()->default_value(
-            types, "")->multitoken();
+        types, "")->multitoken();
 
     options.add_options()
         ("symbols", default_symbols, "Set the number of symbols");

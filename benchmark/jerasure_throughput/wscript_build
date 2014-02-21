@@ -11,7 +11,7 @@ bld.program(
 
 
 bld.program(
-    features = 'cxx benchmark',
+    features = 'cxx',
     source   = ['encoder.cpp'],
     target   = 'jerasure_encoder',
     use      = ['jerasure', 'gf_complete',

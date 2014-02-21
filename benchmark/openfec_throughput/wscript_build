@@ -11,7 +11,7 @@
 
 
 bld.program(
-    features = 'c benchmark',
+    features = 'c',
     source   = bld.path.ant_glob('*.c'),
     target   = 'openfec_throughput',
     use      = ['openfec', 'M', 'OPENFEC_SHARED',

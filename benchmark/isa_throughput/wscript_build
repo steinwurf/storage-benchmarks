@@ -11,7 +11,7 @@ bld.program(
 
 
 bld.program(
-    features = 'c benchmark',
+    features = 'c',
     source   = ['erasure_code_sse_perf.c'],
     target   = 'isa_sse_throughput',
     use      = ['isa',
