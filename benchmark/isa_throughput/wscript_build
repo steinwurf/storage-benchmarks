@@ -1,13 +1,13 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-#bld.program(
-#    features = 'cxx test benchmark',
-#    source   = ['main.cpp'],
-#    target   = 'jerasure_throughput',
-#    use      = ['jerasure', 'gf_complete',
-#                'boost_includes', 'boost_system', 'boost_timer',
-#                'boost_chrono', 'gauge'])
+bld.program(
+    features = 'cxx test benchmark',
+    source   = ['isa.cpp'],
+    target   = 'isa_throughput',
+    use      = ['isa',
+                'boost_includes', 'boost_system', 'boost_timer',
+                'boost_chrono', 'gauge'])
 
 
 bld.program(
