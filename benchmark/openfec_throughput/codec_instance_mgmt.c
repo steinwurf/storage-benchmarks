@@ -128,7 +128,8 @@ of_session_t *
                         goto error;
                 }
                 if (use_callback) {
-                    of_set_callback_functions(ses, decode_source_symbol_callback, NULL, NULL);
+                    of_set_callback_functions(ses,
+                        decode_source_symbol_callback, NULL, NULL);
                 }
 
                 return ses;

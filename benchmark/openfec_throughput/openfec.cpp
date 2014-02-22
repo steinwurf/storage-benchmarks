@@ -34,7 +34,7 @@ struct openfec_rs_encoder
         int i;
         int vector_count = k + m;
 
-        // Resize data pointer vectors
+        // Resize data vectors
         m_symbol_table.resize(vector_count);
         m_data.resize(vector_count);
         for (i = 0; i < vector_count; ++i)
@@ -54,7 +54,7 @@ struct openfec_rs_encoder
         }
 
         // Set pointers to point to the repair symbol buffers
-        for (i = k; i < m; i++)
+        for (i = k; i < k + m; i++)
         {
             m_symbol_table[i] = (char*)&(m_data[i][0]);
         }
@@ -89,9 +89,9 @@ struct openfec_rs_encoder
         }
 
         // Generate repair symbols
-        for (int esi = k; esi < k + m; esi++)
+        for (int i = k; i < k + m; i++)
         {
-            if (of_build_repair_symbol(ses, (void**)&m_symbol_table[0], esi))
+            if (of_build_repair_symbol(ses, (void**)&m_symbol_table[0], i))
             {
                 printf("of_build_repair_symbol() failed\n");
             }
@@ -125,12 +125,10 @@ protected:
     // Number of generated payloads
     uint32_t m_payload_count;
 
-    // OpenFEC arguments
-    //
-    // orig_symb: table of all symbols (source+repair) in sequential order
+    // Table of all symbols (source+repair) in sequential order
     std::vector<char*> m_symbol_table;
 
-    /// Storage for encoded symbols
+    // Storage for source and repair symbols
     std::vector<std::vector<uint8_t>> m_data;
 };
 
@@ -141,34 +139,110 @@ struct openfec_rs_decoder
         m_symbols(symbols), m_symbol_size(symbol_size)
     {
         k = m_symbols;
-        m = 2 * m_symbols;
+        m = m_symbols;
 
         m_block_size = m_symbols * m_symbol_size;
         m_decoding_result = -1;
+
+        int i;
+        int vector_count = k + m;
+
+        // Resize data vectors
+        m_symbol_table.resize(vector_count);
+        m_data.resize(vector_count);
+        for (i = 0; i < vector_count; ++i)
+        {
+            m_data[i].resize(m_symbol_size);
+        }
+
+        // Set pointers to point to the input symbols
+        for (i = 0; i < k; i++)
+        {
+            m_symbol_table[i] = (char*)&(m_data[i][0]);
+        }
+
+        // Set pointers to point to the repair symbol buffers
+        for (i = k; i < m; i++)
+        {
+            m_symbol_table[i] = (char*)&(m_data[i][0]);
+        }
     }
 
     ~openfec_rs_decoder()
     {
     }
 
+    static void* allocate_source_symbol(void* context, uint32_t size,
+        uint32_t esi)
+    {
+        openfec_rs_decoder* self = (openfec_rs_decoder*)context;
+        assert(size == self->m_symbol_size);
+        //printf("alloc symbol() %d %d\n", size, esi);
+        return (void*)&(self->m_data[esi][0]);
+    }
+
     void decode_all(std::shared_ptr<openfec_rs_encoder> encoder)
     {
-        uint32_t payload_count = encoder->payload_count();
-        assert(payload_count == (uint32_t)m);
+        int payload_count = (int)encoder->payload_count();
+        assert(payload_count == m);
+
+        of_session_t* ses;
+        of_codec_id_t codec_id = OF_CODEC_REED_SOLOMON_GF_2_8_STABLE;
+        of_codec_type_t codec_type = OF_DECODER;
+
+        // Create the codec instance and initialize it accordingly
+        if (of_create_codec_instance(&ses, codec_id, codec_type,
+            of_verbosity))
+        {
+            printf("of_create_codec_instance() failed\n");
+        }
+
+        of_rs_parameters_t params;
+        params.nb_source_symbols = k;
+        params.nb_repair_symbols = m;
+        params.encoding_symbol_length = m_symbol_size;
+        if (of_set_fec_parameters(ses, (of_parameters_t*)&params))
+        {
+            printf("of_set_fec_parameters() failed\n");
+        }
+
+        // The decoder uses the pre-allocated data buffers to avoid unnecessary
+        // copying after decoding
+        of_set_callback_functions(ses,
+            allocate_source_symbol, NULL, (void*)this);
+
+        // Generate repair symbols
+        for (int i = k; i < k + payload_count; i++)
+        {
+            if (of_decode_with_new_symbol(ses, &encoder->m_data[i][0], i) ==
+                OF_STATUS_ERROR)
+            {
+                printf("of_decode_with_new_symbol() failed\n");
+            }
+        }
+
+        if (of_is_decoding_complete(ses) == true)
+            m_decoding_result = 0;
+
+        // Release the FEC codec instance.
+        if (of_release_codec_instance(ses))
+        {
+            printf("of_release_codec_instance() failed\n");
+        }
     }
 
     bool verify_data(std::shared_ptr<openfec_rs_encoder> encoder)
     {
         assert(m_block_size == encoder->block_size());
 
-//         for (int i = 0; i < k; i++)
-//         {
-//             if (memcmp(m_buffs[i], encoder->m_buffs[src_err_list[i]],
-//                 m_symbol_size))
-//             {
-//                 return false;
-//             }
-//         }
+        for (int i = 0; i < k; i++)
+        {
+            if (memcmp(&m_data[i][0], &(encoder->m_data[i][0]),
+                m_symbol_size))
+            {
+                return false;
+            }
+        }
 
         return true;
     }
@@ -192,6 +266,12 @@ protected:
     uint32_t m_block_size;
 
     int m_decoding_result;
+
+    // Table of all symbols (source+repair) in sequential order
+    std::vector<char*> m_symbol_table;
+
+    // Storage for source and repair symbols
+    std::vector<std::vector<uint8_t>> m_data;
 };
 
 BENCHMARK_OPTION(throughput_options)
@@ -220,7 +300,7 @@ BENCHMARK_OPTION(throughput_options)
 
     std::vector<std::string> types;
     types.push_back("encoder");
-    //types.push_back("decoder");
+    types.push_back("decoder");
 
     auto default_types =
         gauge::po::value<std::vector<std::string> >()->default_value(
