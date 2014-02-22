@@ -177,7 +177,6 @@ struct openfec_rs_decoder
     {
         openfec_rs_decoder* self = (openfec_rs_decoder*)context;
         assert(size == self->m_symbol_size);
-        //printf("alloc symbol() %d %d\n", size, esi);
         return (void*)&(self->m_data[esi][0]);
     }
 
@@ -325,7 +324,7 @@ BENCHMARK_OPTION(throughput_options)
 typedef throughput_benchmark<openfec_rs_encoder, openfec_rs_decoder>
     openfec_rs_throughput;
 
-BENCHMARK_F(openfec_rs_throughput, OpenFEC, ReedSolomon, 1)
+BENCHMARK_F(openfec_rs_throughput, OpenFEC, ReedSolomon, 10)
 {
     run_benchmark();
 }
