@@ -37,7 +37,7 @@ struct openfec_rs_encoder
         // Resize data vectors
         m_symbol_table.resize(vector_count);
         m_data.resize(vector_count);
-        for (i = 0; i < vector_count; ++i)
+        for (i = 0; i < vector_count; i++)
         {
             m_data[i].resize(m_symbol_size);
         }
@@ -144,27 +144,11 @@ struct openfec_rs_decoder
         m_block_size = m_symbols * m_symbol_size;
         m_decoding_result = -1;
 
-        int i;
-        int vector_count = k + m;
-
-        // Resize data vectors
-        m_symbol_table.resize(vector_count);
-        m_data.resize(vector_count);
-        for (i = 0; i < vector_count; ++i)
+        // Resize data vector to hold original symbols
+        m_data.resize(m_symbols);
+        for (uint32_t i = 0; i < m_symbols; i++)
         {
             m_data[i].resize(m_symbol_size);
-        }
-
-        // Set pointers to point to the input symbols
-        for (i = 0; i < k; i++)
-        {
-            m_symbol_table[i] = (char*)&(m_data[i][0]);
-        }
-
-        // Set pointers to point to the repair symbol buffers
-        for (i = k; i < m; i++)
-        {
-            m_symbol_table[i] = (char*)&(m_data[i][0]);
         }
     }
 
@@ -234,7 +218,7 @@ struct openfec_rs_decoder
     {
         assert(m_block_size == encoder->block_size());
 
-        for (int i = 0; i < k; i++)
+        for (uint32_t i = 0; i < m_symbols; i++)
         {
             if (memcmp(&m_data[i][0], &(encoder->m_data[i][0]),
                 m_symbol_size))
@@ -266,10 +250,7 @@ protected:
 
     int m_decoding_result;
 
-    // Table of all symbols (source+repair) in sequential order
-    std::vector<char*> m_symbol_table;
-
-    // Storage for source and repair symbols
+    // Storage for source symbols
     std::vector<std::vector<uint8_t>> m_data;
 };
 
