@@ -144,7 +144,7 @@ struct isa_decoder
 
         // Fill the erasure list
         int errors = 0;
-        for (uint8_t& e : erased)
+        for (const uint8_t& e : erased)
         {
             src_err_list[errors++] = e;
         }
