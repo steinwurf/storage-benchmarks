@@ -34,7 +34,7 @@ struct isa_encoder
         k = m_symbols;
         m = m_symbols + 6;
         m_block_size = m_symbols * m_symbol_size;
-        m_payload_count = m_symbols;
+        m_payload_count = m - k;
 
         // Symbol size must be a multiple of 64
         assert(m_symbol_size % 64 == 0);
@@ -67,7 +67,7 @@ struct isa_encoder
 
     void encode_all()
     {
-        assert(m_payload_count == (uint32_t)(m-k));
+        //assert(m_payload_count == (uint32_t)(m-k));
 
         gf_gen_rs_matrix(a, m, k);
 
