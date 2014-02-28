@@ -10,6 +10,7 @@
 #include <cstring>  // for memset, memcmp
 
 #include <vector>
+#include <set>
 
 #include <gauge/gauge.hpp>
 
@@ -31,7 +32,7 @@ struct isa_encoder
         m_symbols(symbols), m_symbol_size(symbol_size)
     {
         k = m_symbols;
-        m = 2 * m_symbols;
+        m = m_symbols + 6;
         m_block_size = m_symbols * m_symbol_size;
         m_payload_count = m_symbols;
 
@@ -109,7 +110,7 @@ struct isa_decoder
         m_symbols(symbols), m_symbol_size(symbol_size)
     {
         k = m_symbols;
-        m = 2 * m_symbols;
+        m = m_symbols + 6;
 
         m_block_size = m_symbols * m_symbol_size;
         m_decoding_result = -1;
@@ -130,14 +131,25 @@ struct isa_decoder
         // No original symbols used during decoding (worst case)
         memset(src_in_err, 0, TEST_SOURCES);
 
-        int errors;
-        for (i = 0, errors = 0; i < k && errors < m - k; i++)
+        std::set<uint8_t> erased;
+        while (erased.size() < m - k)
         {
-            int err = 1; //rand() % 2;
-            src_in_err[i] = err;
-            if (err) src_err_list[errors++] = i;
+            uint8_t random_symbol = rand() % k;
+            auto ret = erased.insert(random_symbol);
+            // Skip this symbol if it was already included in the erased set
+            if (ret.second==false) continue;
+            // Indicate the erasure
+            src_in_err[random_symbol] = 1;
         }
-        nerrs = errors;
+
+        // Fill the erasure list
+        int errors = 0;
+        for (uint8_t& e : erased)
+        {
+            src_err_list[errors++] = e;
+        }
+
+        nerrs = erased.size();
         assert(nerrs == m - k);
 
         gf_gen_rs_matrix(a, m, k);
