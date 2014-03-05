@@ -32,7 +32,7 @@ struct isa_encoder
         m_symbols(symbols), m_symbol_size(symbol_size)
     {
         k = m_symbols;
-        m = m_symbols + 6;
+        m = m_symbols + 24;
         m_block_size = m_symbols * m_symbol_size;
         m_payload_count = m - k;
 
@@ -110,7 +110,7 @@ struct isa_decoder
         m_symbols(symbols), m_symbol_size(symbol_size)
     {
         k = m_symbols;
-        m = m_symbols + 6;
+        m = m_symbols + 24;
 
         m_block_size = m_symbols * m_symbol_size;
         m_decoding_result = -1;
