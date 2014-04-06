@@ -10,6 +10,9 @@ project_dependencies = \
     'boost',
     'gauge',
     'tables',
+    'sak',
+    'fifi',
+    'kodo',
 ]
 
 # Importing a dynamically generated module

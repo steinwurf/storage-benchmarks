@@ -3,7 +3,7 @@
 
 import os
 
-APPNAME = 'external-benchmarks'
+APPNAME = 'storage-benchmarks'
 VERSION = '0.1.0'
 
 def recurse_helper(ctx, name):
@@ -44,6 +44,36 @@ def options(opt):
             git_repository = 'github.com/steinwurf/tables.git',
             major_version = 4))
 
+    bundle.add_dependency(opt,
+        resolve.ResolveGitMajorVersion(
+            name = 'sak',
+            git_repository = 'github.com/steinwurf/sak.git',
+            major_version = 10))
+
+    bundle.add_dependency(opt,
+        resolve.ResolveGitMajorVersion(
+            name = 'fifi',
+            git_repository = 'github.com/steinwurf/fifi.git',
+            major_version = 11))
+
+    bundle.add_dependency(opt,
+        resolve.ResolveGitMajorVersion(
+             name = 'kodo',
+             git_repository = 'github.com/steinwurf/kodo.git',
+             major_version = 17))
+
+    bundle.add_dependency(opt,
+        resolve.ResolveGitMajorVersion(
+            name = 'cpuid',
+            git_repository = 'github.com/steinwurf/cpuid.git',
+            major_version = 3))
+
+    bundle.add_dependency(opt,
+        resolve.ResolveGitMajorVersion(
+            name = 'platform',
+            git_repository = 'github.com/steinwurf/platform.git',
+            major_version = 1))
+
     opt.load('wurf_dependency_bundle')
     opt.load('wurf_tools')
 
@@ -62,6 +92,11 @@ def configure(conf):
         recurse_helper(conf, 'boost')
         recurse_helper(conf, 'gauge')
         recurse_helper(conf, 'tables')
+        recurse_helper(conf, 'sak')
+        recurse_helper(conf, 'fifi')
+        recurse_helper(conf, 'kodo')
+        recurse_helper(conf, 'cpuid')
+        recurse_helper(conf, 'platform')
 
     if conf.is_mkspec_platform('linux'):
         if not conf.env['LIB_PTHREAD']:
@@ -183,6 +218,11 @@ def build(bld):
         recurse_helper(bld, 'boost')
         recurse_helper(bld, 'gauge')
         recurse_helper(bld, 'tables')
+        recurse_helper(bld, 'sak')
+        recurse_helper(bld, 'fifi')
+        recurse_helper(bld, 'kodo')
+        recurse_helper(bld, 'cpuid')
+        recurse_helper(bld, 'platform')
 
         # Only build test and benchmarks when executed from the
         # top-level wscript i.e. not when included as a dependency
@@ -191,6 +231,7 @@ def build(bld):
         bld.recurse('benchmark/jerasure_throughput')
         bld.recurse('benchmark/isa_throughput')
         bld.recurse('benchmark/openfec_throughput')
+        bld.recurse('benchmark/kodo_throughput')
 
 
 
