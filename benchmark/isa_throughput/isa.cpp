@@ -111,6 +111,7 @@ struct isa_decoder
     {
         k = m_symbols;
         m = m_symbols + m_symbols / 2;
+        uint32_t payload_count = m - k;
 
         m_block_size = m_symbols * m_symbol_size;
         m_decoding_result = -1;
@@ -132,7 +133,7 @@ struct isa_decoder
         memset(src_in_err, 0, TEST_SOURCES);
 
         std::set<uint8_t> erased;
-        while (erased.size() < m - k)
+        while (erased.size() < payload_count)
         {
             uint8_t random_symbol = rand() % k;
             auto ret = erased.insert(random_symbol);
@@ -150,7 +151,7 @@ struct isa_decoder
         }
 
         nerrs = erased.size();
-        assert(nerrs == m - k);
+        assert(erased.size() == payload_count);
 
         gf_gen_rs_matrix(a, m, k);
     }
