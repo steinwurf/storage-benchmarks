@@ -3,7 +3,7 @@
 
 bld.program(
     features = 'cxx benchmark',
-    source   = ['main.cpp'],
+    source   = ['kodo_storage.cpp'],
     target   = 'kodo_storage',
     use = ['kodo_includes', 'fifi', 'sak_includes',
            'cpuid', 'platform_includes',

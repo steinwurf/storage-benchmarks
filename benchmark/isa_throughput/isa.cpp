@@ -32,7 +32,7 @@ struct isa_encoder
         m_symbols(symbols), m_symbol_size(symbol_size)
     {
         k = m_symbols;
-        m = m_symbols + 24;
+        m = m_symbols + m_symbols / 2;
         m_block_size = m_symbols * m_symbol_size;
         m_payload_count = m - k;
 
@@ -110,7 +110,7 @@ struct isa_decoder
         m_symbols(symbols), m_symbol_size(symbol_size)
     {
         k = m_symbols;
-        m = m_symbols + 24;
+        m = m_symbols + m_symbols / 2;
 
         m_block_size = m_symbols * m_symbol_size;
         m_decoding_result = -1;
@@ -259,8 +259,8 @@ BENCHMARK_OPTION(throughput_options)
 
     std::vector<uint32_t> symbols;
     symbols.push_back(16);
-    //     symbols.push_back(32);
-    //     symbols.push_back(64);
+    symbols.push_back(32);
+    symbols.push_back(64);
     //     symbols.push_back(128);
     //     symbols.push_back(256);
     //     symbols.push_back(512);

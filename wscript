@@ -230,5 +230,5 @@ def build(bld):
 
         bld.recurse('benchmark/isa_throughput')
         bld.recurse('benchmark/jerasure_throughput')
-        bld.recurse('benchmark/kodo_throughput')
+        bld.recurse('benchmark/kodo_storage')
         bld.recurse('benchmark/openfec_throughput')
