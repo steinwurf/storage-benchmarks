@@ -30,7 +30,7 @@ struct openfec_rs_encoder
         k = m_symbols;
         m = m_symbols / 2;
         m_block_size = m_symbols * m_symbol_size;
-        m_payload_count = m_symbols;
+        m_payload_count = m;
 
         int i;
         int vector_count = k + m;
