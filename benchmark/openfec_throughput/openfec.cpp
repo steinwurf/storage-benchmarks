@@ -232,7 +232,7 @@ struct openfec_rs_decoder
         assert(m_block_size == encoder->block_size());
 
         // We only verify the erased symbols
-        for (const uint8_t& e : erased)
+        for (const uint8_t& e : m_erased)
         {
             if (memcmp(&m_data[e][0], &(encoder->m_data[e][0]), m_symbol_size))
             {
