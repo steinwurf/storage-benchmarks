@@ -10,6 +10,7 @@
 #include <cstring>  // for memset, memcmp
 
 #include <vector>
+#include <set>
 
 #include <gauge/gauge.hpp>
 
@@ -27,7 +28,7 @@ struct openfec_rs_encoder
         m_symbols(symbols), m_symbol_size(symbol_size)
     {
         k = m_symbols;
-        m = m_symbols;
+        m = m_symbols / 2;
         m_block_size = m_symbols * m_symbol_size;
         m_payload_count = m_symbols;
 
@@ -139,7 +140,7 @@ struct openfec_rs_decoder
         m_symbols(symbols), m_symbol_size(symbol_size)
     {
         k = m_symbols;
-        m = m_symbols;
+        m = m_symbols / 2;
 
         m_block_size = m_symbols * m_symbol_size;
         m_decoding_result = -1;
@@ -149,6 +150,16 @@ struct openfec_rs_decoder
         for (uint32_t i = 0; i < m_symbols; i++)
         {
             m_data[i].resize(m_symbol_size);
+        }
+
+        // Simulate m erasures (erase some original symbols)
+        // The symbols will be restored by processing the encoded symbols
+        while (m_erased.size() < (uint32_t)m)
+        {
+            uint8_t random_symbol = rand() % k;
+            auto ret = m_erased.insert(random_symbol);
+            // Skip this symbol if it was already included in the erased set
+            if (ret.second==false) continue;
         }
     }
 
@@ -189,14 +200,16 @@ struct openfec_rs_decoder
             printf("of_set_fec_parameters() failed\n");
         }
 
-        // The decoder uses the pre-allocated data buffers to avoid unnecessary
+        // The decoder uses pre-allocated data buffers to avoid unnecessary
         // copying after decoding
         of_set_callback_functions(ses,
             allocate_source_symbol, NULL, (void*)this);
 
-        // Generate repair symbols
-        for (int i = k; i < k + payload_count; i++)
+        // Process original and repair symbols
+        for (int i = 0; i < k + payload_count; i++)
         {
+            // Skip the erased original symbols
+            if (m_erased.count(i)) continue;
             if (of_decode_with_new_symbol(ses, &encoder->m_data[i][0], i) ==
                 OF_STATUS_ERROR)
             {
@@ -220,8 +233,7 @@ struct openfec_rs_decoder
 
         for (uint32_t i = 0; i < m_symbols; i++)
         {
-            if (memcmp(&m_data[i][0], &(encoder->m_data[i][0]),
-                m_symbol_size))
+            if (memcmp(&m_data[i][0], &(encoder->m_data[i][0]), m_symbol_size))
             {
                 return false;
             }
@@ -247,6 +259,8 @@ protected:
     uint32_t m_symbol_size;
     // Size of a full generation (k symbols)
     uint32_t m_block_size;
+    // Set of erased symbols
+    std::set<uint8_t> m_erased;
 
     int m_decoding_result;
 

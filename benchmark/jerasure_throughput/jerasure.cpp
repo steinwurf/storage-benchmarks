@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <vector>
+#include <set>
 
 #include <gauge/gauge.hpp>
 
