@@ -206,10 +206,10 @@ struct openfec_rs_decoder
             allocate_source_symbol, NULL, (void*)this);
 
         // Process original and repair symbols
-        for (int i = 0; i < k; i++)
+        for (int i = 0; i < k + m; i++)
         {
             // Skip the erased original symbols
-            //if (m_erased.count(i)) continue;
+            if (m_erased.count(i)) continue;
             if (of_decode_with_new_symbol(ses, &encoder->m_data[i][0], i) ==
                 OF_STATUS_ERROR)
             {
@@ -231,9 +231,10 @@ struct openfec_rs_decoder
     {
         assert(m_block_size == encoder->block_size());
 
-        for (uint32_t i = 0; i < m_symbols; i++)
+        // We only verify the erased symbols
+        for (const uint8_t& e : erased)
         {
-            if (memcmp(&m_data[i][0], &(encoder->m_data[i][0]), m_symbol_size))
+            if (memcmp(&m_data[e][0], &(encoder->m_data[e][0]), m_symbol_size))
             {
                 return false;
             }
