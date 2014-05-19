@@ -25,7 +25,7 @@ struct reed_sol_van_encoder
         m_symbols(symbols), m_symbol_size(symbol_size), matrix(0)
     {
         k = m_symbols;
-        m = m_symbols;
+        m = m_symbols / 2;
         w = 8;
         m_block_size = m_symbols * m_symbol_size;
 
@@ -44,7 +44,7 @@ struct reed_sol_van_encoder
         set_symbols(&m_data_in[0], m_data_in.size());
 
         // Prepare storage to the encoded payloads
-        m_payload_count = m_symbols;
+        m_payload_count = m;
 
         m_payloads.resize(m_payload_count);
         for (uint32_t i = 0; i < m_payload_count; ++i)
@@ -125,7 +125,7 @@ struct reed_sol_van_decoder
         m_symbols(symbols), m_symbol_size(symbol_size), matrix(0)
     {
         k = m_symbols;
-        m = m_symbols;
+        m = m_symbols / 2;
         w = 8;
         m_block_size = m_symbols * m_symbol_size;
         m_decoding_result = -1;
@@ -134,12 +134,23 @@ struct reed_sol_van_decoder
         data.resize(k);
         coding.resize(m);
 
-        // Simulate m erasures (erase all original symbols)
-        erasures.resize(m+1);
-        // No original symbols used during decoding (worst case)
-        for (int i = 0; i < m; i++)
+        // Simulate m erasures (erase some original symbols)
+        // The symbols will be restored by processing the encoded symbols
+        std::set<uint8_t> erased;
+        while (erased.size() < (uint32_t)m)
         {
-            erasures[i] = i;
+            uint8_t random_symbol = rand() % k;
+            auto ret = erased.insert(random_symbol);
+            // Skip this symbol if it was already included in the erased set
+            if (ret.second==false) continue;
+        }
+
+        // Fill the erasure list
+        erasures.resize(m + 1);
+        int errors = 0;
+        for (const uint8_t& e : erased)
+        {
+            erasures[errors++] = e;
         }
         // Terminate erasures vector with a -1 value
         erasures[m] = -1;
@@ -221,8 +232,8 @@ BENCHMARK_OPTION(throughput_options)
 
     std::vector<uint32_t> symbols;
     symbols.push_back(16);
-//     symbols.push_back(32);
-//     symbols.push_back(64);
+    symbols.push_back(32);
+    symbols.push_back(64);
 //     symbols.push_back(128);
 //     symbols.push_back(256);
 //     symbols.push_back(512);

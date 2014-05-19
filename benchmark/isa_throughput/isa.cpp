@@ -128,8 +128,8 @@ struct isa_decoder
             m_buffs[i] = (uint8_t*)buf;
         }
 
-        // Simulate m-k erasures (erase all original symbols)
-        // No original symbols used during decoding (worst case)
+        // Simulate m-k erasures (erase some original symbols)
+        // The symbols will be restored by processing the encoded symbols
         memset(src_in_err, 0, TEST_SOURCES);
 
         std::set<uint8_t> erased;
