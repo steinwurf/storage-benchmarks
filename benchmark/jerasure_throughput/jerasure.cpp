@@ -136,7 +136,7 @@ struct reed_sol_van_decoder
 
         // Simulate m erasures (erase some original symbols)
         // The symbols will be restored by processing the encoded symbols
-        std::set<uint8_t> erased;
+
         while (erased.size() < (uint32_t)m)
         {
             uint8_t random_symbol = rand() % k;
@@ -177,7 +177,11 @@ struct reed_sol_van_decoder
         for (int i = 0; i < k; i++)
         {
             assert((i+1) * m_symbol_size <= data_size);
-            data[i] = (char*)&m_data_out[i * m_symbol_size];
+            // Use original symbols that were not erased
+            if (erased.count(i) == 0)
+                data[i] = encoder->data[i];
+            else
+                data[i] = (char*)&m_data_out[i * m_symbol_size];
         }
 
         for (uint32_t i = 0; i < payload_count; ++i)
@@ -193,8 +197,17 @@ struct reed_sol_van_decoder
     bool verify_data(std::shared_ptr<reed_sol_van_encoder> encoder)
     {
         assert(m_data_out.size() == encoder->m_data_in.size());
-        return std::equal(m_data_out.begin(), m_data_out.end(),
-                          encoder->m_data_in.begin());
+
+        // We only verify the erased symbols
+        for (const uint8_t& e : erased)
+        {
+            if (memcmp(data[e], encoder->data[e], m_symbol_size))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     bool is_complete() { return (m_decoding_result != -1); }
@@ -222,6 +235,7 @@ protected:
     std::vector<char*> data;
     std::vector<char*> coding;
     int* matrix;
+    std::set<uint8_t> erased;
     std::vector<int> erasures;
     int m_decoding_result;
 };
