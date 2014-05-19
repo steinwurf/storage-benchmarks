@@ -206,10 +206,10 @@ struct openfec_rs_decoder
             allocate_source_symbol, NULL, (void*)this);
 
         // Process original and repair symbols
-        for (int i = 0; i < k + payload_count; i++)
+        for (int i = 0; i < k; i++)
         {
             // Skip the erased original symbols
-            if (m_erased.count(i)) continue;
+            //if (m_erased.count(i)) continue;
             if (of_decode_with_new_symbol(ses, &encoder->m_data[i][0], i) ==
                 OF_STATUS_ERROR)
             {
