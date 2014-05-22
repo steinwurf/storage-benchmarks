@@ -515,11 +515,11 @@ BENCHMARK_F(setup_rlnc_throughput8, FullRLNC, Binary8, 5)
 //------------------------------------------------------------------
 
 typedef sparse_storage_benchmark<
-    kodo::thread_encoder<fifi::binary8>,
+    kodo::sparse_thread_encoder<fifi::binary8>,
     kodo::thread_decoder<fifi::binary8>>
     setup_thread_throughput8;
 
-BENCHMARK_F(setup_thread_throughput8, Thread, Binary8, 5)
+BENCHMARK_F(setup_thread_throughput8, SparseThread, Binary8, 5)
 {
     run_benchmark();
 }
