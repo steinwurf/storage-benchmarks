@@ -511,11 +511,11 @@ BENCHMARK_F(setup_rlnc_throughput8, FullRLNC, Binary8, 5)
 }
 
 //------------------------------------------------------------------
-// ThreadedDecoder
+// Threaded RLNC
 //------------------------------------------------------------------
 
-typedef storage_benchmark<
-     kodo::thread_encoder<fifi::binary8>,
+typedef sparse_storage_benchmark<
+    kodo::thread_encoder<fifi::binary8>,
     kodo::thread_decoder<fifi::binary8>>
     setup_thread_throughput8;
 
