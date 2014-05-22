@@ -18,6 +18,7 @@
 #include <kodo/has_systematic_encoder.hpp>
 #include <kodo/set_systematic_off.hpp>
 #include <kodo/rlnc/full_rlnc_codes.hpp>
+#include <kodo/thread_decoder.hpp>
 
 #include <tables/table.hpp>
 
@@ -504,6 +505,20 @@ typedef storage_benchmark<
     setup_rlnc_throughput8;
 
 BENCHMARK_F(setup_rlnc_throughput8, FullRLNC, Binary8, 5)
+{
+    run_benchmark();
+}
+
+//------------------------------------------------------------------
+// ThreadedDecoder
+//------------------------------------------------------------------
+
+typedef storage_benchmark<
+    kodo::shallow_full_rlnc_encoder<fifi::binary8>,
+    kodo::thread_decoder<fifi::binary8>>
+    setup_thread_throughput8;
+
+BENCHMARK_F(setup_thread_throughput8, Thread, Binary8, 5)
 {
     run_benchmark();
 }
