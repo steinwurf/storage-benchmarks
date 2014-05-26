@@ -28,13 +28,14 @@ extern "C"
 
 struct isa_encoder
 {
-    isa_encoder(uint32_t symbols, uint32_t symbol_size) :
+    isa_encoder(
+        uint32_t symbols, uint32_t symbol_size, uint32_t encoded_symbols) :
         m_symbols(symbols), m_symbol_size(symbol_size)
     {
         k = m_symbols;
-        m = m_symbols + m_symbols / 2;
+        m = m_symbols + encoded_symbols;
         m_block_size = m_symbols * m_symbol_size;
-        m_payload_count = m - k;
+        m_payload_count = encoded_symbols;
 
         // Symbol size must be a multiple of 64
         assert(m_symbol_size % 64 == 0);
@@ -106,12 +107,13 @@ protected:
 
 struct isa_decoder
 {
-    isa_decoder(uint32_t symbols, uint32_t symbol_size) :
+    isa_decoder(
+        uint32_t symbols, uint32_t symbol_size, uint32_t encoded_symbols) :
         m_symbols(symbols), m_symbol_size(symbol_size)
     {
         k = m_symbols;
-        m = m_symbols + m_symbols / 2;
-        uint32_t payload_count = m - k;
+        m = m_symbols + encoded_symbols;
+        uint32_t payload_count = encoded_symbols;
 
         m_block_size = m_symbols * m_symbol_size;
         m_decoding_result = -1;
@@ -270,6 +272,13 @@ BENCHMARK_OPTION(throughput_options)
         gauge::po::value<std::vector<uint32_t> >()->default_value(
             symbols, "")->multitoken();
 
+    std::vector<double> redundancy;
+    redundancy.push_back(0.5);
+
+    auto default_redundancy =
+        gauge::po::value<std::vector<double>>()->default_value(
+            redundancy, "")->multitoken();
+
     // Symbol size must be a multiple of 64
     std::vector<uint32_t> symbol_size;
     symbol_size.push_back(1000000);
@@ -288,6 +297,9 @@ BENCHMARK_OPTION(throughput_options)
 
     options.add_options()
         ("symbols", default_symbols, "Set the number of symbols");
+
+    options.add_options()
+        ("redundancy", default_redundancy, "Set the ratio of repair symbols");
 
     options.add_options()
         ("symbol_size", default_symbol_size, "Set the symbol size in bytes");

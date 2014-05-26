@@ -111,28 +111,37 @@ struct throughput_benchmark : public gauge::time_benchmark
     void get_options(gauge::po::variables_map& options)
     {
         auto symbols = options["symbols"].as<std::vector<uint32_t> >();
+        auto redundancy = options["redundancy"].as<std::vector<double> >();
         auto symbol_size = options["symbol_size"].as<std::vector<uint32_t> >();
         auto types = options["type"].as<std::vector<std::string> >();
 
         assert(symbols.size() > 0);
+        assert(redundancy.size() > 0);
         assert(symbol_size.size() > 0);
         assert(types.size() > 0);
 
-        for (uint32_t i = 0; i < symbols.size(); ++i)
+        for (const auto& s : symbols)
         {
-            for (uint32_t j = 0; j < symbol_size.size(); ++j)
+            for (const auto& r : redundancy)
             {
-                // Symbol size must be a multiple of 32
-                assert(symbol_size[j] % 32 == 0);
-                for (uint32_t u = 0; u < types.size(); ++u)
+                for (const auto& p : symbol_size)
                 {
-                    gauge::config_set cs;
-                    cs.set_value<uint32_t>("symbols", symbols[i]);
-                    cs.set_value<uint32_t>("symbol_size", symbol_size[j]);
+                    // Symbol size must be a multiple of 32
+                    assert(p % 32 == 0);
 
-                    cs.set_value<std::string>("type", types[u]);
+                    for (const auto& t : types)
+                    {
+                        gauge::config_set cs;
+                        cs.set_value<uint32_t>("symbols", s);
+                        cs.set_value<uint32_t>("symbol_size", p);
+                        cs.set_value<double>("redundancy", r);
+                        cs.set_value<std::string>("type", t);
 
-                    add_configuration(cs);
+                        uint32_t encoded = (uint32_t)std::ceil(s * r);
+                        cs.set_value<uint32_t>("encoded_symbols", encoded);
+
+                        add_configuration(cs);
+                    }
                 }
             }
         }
@@ -144,9 +153,12 @@ struct throughput_benchmark : public gauge::time_benchmark
 
         uint32_t symbols = cs.get_value<uint32_t>("symbols");
         uint32_t symbol_size = cs.get_value<uint32_t>("symbol_size");
+        uint32_t encoded_symbols = cs.get_value<uint32_t>("encoded_symbols");
 
-        m_encoder = std::make_shared<Encoder>(symbols, symbol_size);
-        m_decoder = std::make_shared<Decoder>(symbols, symbol_size);
+        m_encoder = std::make_shared<Encoder>(
+            symbols, symbol_size, encoded_symbols);
+        m_decoder = std::make_shared<Decoder>(
+            symbols, symbol_size, encoded_symbols);
     }
 
     void encode_payloads()

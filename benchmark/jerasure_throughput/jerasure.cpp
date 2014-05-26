@@ -22,11 +22,12 @@ extern "C"
 
 struct reed_sol_van_encoder
 {
-    reed_sol_van_encoder(uint32_t symbols, uint32_t symbol_size) :
+    reed_sol_van_encoder(
+        uint32_t symbols, uint32_t symbol_size, uint32_t encoded_symbols) :
         m_symbols(symbols), m_symbol_size(symbol_size), matrix(0)
     {
         k = m_symbols;
-        m = m_symbols / 2;
+        m = encoded_symbols;
         w = 8;
         m_block_size = m_symbols * m_symbol_size;
 
@@ -45,7 +46,7 @@ struct reed_sol_van_encoder
         set_symbols(&m_data_in[0], m_data_in.size());
 
         // Prepare storage to the encoded payloads
-        m_payload_count = m;
+        m_payload_count = encoded_symbols;
 
         m_payloads.resize(m_payload_count);
         for (uint32_t i = 0; i < m_payload_count; ++i)
@@ -122,14 +123,16 @@ protected:
 
 struct reed_sol_van_decoder
 {
-    reed_sol_van_decoder(uint32_t symbols, uint32_t symbol_size) :
+    reed_sol_van_decoder(
+        uint32_t symbols, uint32_t symbol_size, uint32_t encoded_symbols) :
         m_symbols(symbols), m_symbol_size(symbol_size), matrix(0)
     {
         k = m_symbols;
-        m = m_symbols / 2;
+        m = encoded_symbols;
         w = 8;
         m_block_size = m_symbols * m_symbol_size;
         m_decoding_result = -1;
+        uint32_t payload_count = encoded_symbols;
 
         // Resize data and coding pointer vectors
         data.resize(k);
@@ -138,7 +141,7 @@ struct reed_sol_van_decoder
         // Simulate m erasures (erase some original symbols)
         // The symbols will be restored by processing the encoded symbols
 
-        while (erased.size() < (uint32_t)m)
+        while (erased.size() < payload_count)
         {
             uint8_t random_symbol = rand() % k;
             auto ret = erased.insert(random_symbol);
@@ -257,6 +260,13 @@ BENCHMARK_OPTION(throughput_options)
         gauge::po::value<std::vector<uint32_t> >()->default_value(
             symbols, "")->multitoken();
 
+    std::vector<double> redundancy;
+    redundancy.push_back(0.5);
+
+    auto default_redundancy =
+        gauge::po::value<std::vector<double>>()->default_value(
+            redundancy, "")->multitoken();
+
     // Symbol size must be a multiple of 32
     std::vector<uint32_t> symbol_size;
     symbol_size.push_back(1000000);
@@ -275,6 +285,9 @@ BENCHMARK_OPTION(throughput_options)
 
     options.add_options()
         ("symbols", default_symbols, "Set the number of symbols");
+
+    options.add_options()
+        ("redundancy", default_redundancy, "Set the ratio of repair symbols");
 
     options.add_options()
         ("symbol_size", default_symbol_size, "Set the symbol size in bytes");
