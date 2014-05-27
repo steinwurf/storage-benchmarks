@@ -71,7 +71,8 @@ struct openfec_rs_encoder
         assert(m_payload_count == (uint32_t)m);
 
         of_session_t* ses;
-        of_codec_id_t codec_id = OF_CODEC_REED_SOLOMON_GF_2_8_STABLE;
+        //of_codec_id_t codec_id = OF_CODEC_REED_SOLOMON_GF_2_8_STABLE;
+        of_codec_id_t codec_id = OF_CODEC_LDPC_STAIRCASE_STABLE;
         of_codec_type_t codec_type = OF_ENCODER;
 
         // Create the codec instance and initialize it accordingly
@@ -183,7 +184,8 @@ struct openfec_rs_decoder
         assert(payload_count == m);
 
         of_session_t* ses;
-        of_codec_id_t codec_id = OF_CODEC_REED_SOLOMON_GF_2_8_STABLE;
+        //of_codec_id_t codec_id = OF_CODEC_REED_SOLOMON_GF_2_8_STABLE;
+        of_codec_id_t codec_id = OF_CODEC_LDPC_STAIRCASE_STABLE;
         of_codec_type_t codec_type = OF_DECODER;
 
         // Create the codec instance and initialize it accordingly
