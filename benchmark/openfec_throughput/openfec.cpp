@@ -29,9 +29,9 @@ struct openfec_rs_encoder
         m_symbols(symbols), m_symbol_size(symbol_size)
     {
         k = m_symbols;
-        m = encoded_symbols;
+        m = encoded_symbols * 2;
         m_block_size = m_symbols * m_symbol_size;
-        m_payload_count = encoded_symbols;
+        m_payload_count = encoded_symbols * 2;
 
         int i;
         int vector_count = k + m;
@@ -82,10 +82,15 @@ struct openfec_rs_encoder
             printf("of_create_codec_instance() failed\n");
         }
 
-        of_rs_parameters_t params;
+        m_seed = rand();
+
+        //of_rs_parameters_t params;
+        of_ldpc_parameters params;
         params.nb_source_symbols = k;
         params.nb_repair_symbols = m;
         params.encoding_symbol_length = m_symbol_size;
+        params.N1 = 5;
+        params.prng_seed = m_seed;
         if (of_set_fec_parameters(ses, (of_parameters_t*)&params))
         {
             printf("of_set_fec_parameters() failed\n");
@@ -118,6 +123,8 @@ protected:
 
     // Code parameters
     int k, m;
+    // Random seed
+    int32_t m_seed;
 
     // Number of symbols
     uint32_t m_symbols;
@@ -143,7 +150,7 @@ struct openfec_rs_decoder
         m_symbols(symbols), m_symbol_size(symbol_size)
     {
         k = m_symbols;
-        m = encoded_symbols;
+        m = encoded_symbols * 2;
         m_block_size = m_symbols * m_symbol_size;
         m_decoding_result = -1;
         uint32_t payload_count = encoded_symbols;
@@ -159,7 +166,7 @@ struct openfec_rs_decoder
         // The symbols will be restored by processing the encoded symbols
         while (m_erased.size() < payload_count)
         {
-            uint8_t random_symbol = rand() % k;
+            uint32_t random_symbol = rand() % k;
             auto ret = m_erased.insert(random_symbol);
             // Skip this symbol if it was already included in the erased set
             if (ret.second==false) continue;
@@ -195,10 +202,13 @@ struct openfec_rs_decoder
             printf("of_create_codec_instance() failed\n");
         }
 
-        of_rs_parameters_t params;
+        //of_rs_parameters_t params;
+        of_ldpc_parameters params;
         params.nb_source_symbols = k;
         params.nb_repair_symbols = m;
         params.encoding_symbol_length = m_symbol_size;
+        params.N1 = 5;
+        params.prng_seed = encoder->m_seed;
         if (of_set_fec_parameters(ses, (of_parameters_t*)&params))
         {
             printf("of_set_fec_parameters() failed\n");
@@ -219,10 +229,13 @@ struct openfec_rs_decoder
             {
                 printf("of_decode_with_new_symbol() failed\n");
             }
-        }
 
-        if (of_is_decoding_complete(ses) == true)
-            m_decoding_result = 0;
+            if (of_is_decoding_complete(ses) == true)
+            {
+                m_decoding_result = 0;
+                break;
+            }
+        }
 
         // Release the FEC codec instance.
         if (of_release_codec_instance(ses))
@@ -236,7 +249,7 @@ struct openfec_rs_decoder
         assert(m_block_size == encoder->block_size());
 
         // We only verify the erased symbols
-        for (const uint8_t& e : m_erased)
+        for (const uint32_t& e : m_erased)
         {
             if (memcmp(&m_data[e][0], &(encoder->m_data[e][0]), m_symbol_size))
             {
@@ -265,7 +278,7 @@ protected:
     // Size of a full generation (k symbols)
     uint32_t m_block_size;
     // Set of erased symbols
-    std::set<uint8_t> m_erased;
+    std::set<uint32_t> m_erased;
 
     int m_decoding_result;
 
@@ -334,7 +347,7 @@ BENCHMARK_OPTION(throughput_options)
 typedef throughput_benchmark<openfec_rs_encoder, openfec_rs_decoder>
     openfec_rs_throughput;
 
-BENCHMARK_F(openfec_rs_throughput, OpenFEC, ReedSolomon, 10)
+BENCHMARK_F(openfec_rs_throughput, OpenFEC, LDPC, 10)
 {
     run_benchmark();
 }

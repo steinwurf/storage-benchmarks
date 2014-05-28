@@ -143,7 +143,7 @@ struct reed_sol_van_decoder
 
         while (erased.size() < payload_count)
         {
-            uint8_t random_symbol = rand() % k;
+            uint32_t random_symbol = rand() % k;
             auto ret = erased.insert(random_symbol);
             // Skip this symbol if it was already included in the erased set
             if (ret.second==false) continue;
@@ -152,7 +152,7 @@ struct reed_sol_van_decoder
         // Fill the erasure list
         erasures.resize(m + 1);
         int errors = 0;
-        for (const uint8_t& e : erased)
+        for (const uint32_t& e : erased)
         {
             erasures[errors++] = e;
         }
@@ -203,7 +203,7 @@ struct reed_sol_van_decoder
         assert(m_data_out.size() == encoder->m_data_in.size());
 
         // We only verify the erased symbols
-        for (const uint8_t& e : erased)
+        for (const uint32_t& e : erased)
         {
             if (memcmp(data[e], encoder->data[e], m_symbol_size))
             {
@@ -239,7 +239,7 @@ protected:
     std::vector<char*> data;
     std::vector<char*> coding;
     int* matrix;
-    std::set<uint8_t> erased;
+    std::set<uint32_t> erased;
     std::vector<int> erasures;
     int m_decoding_result;
 };
