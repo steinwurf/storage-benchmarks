@@ -89,7 +89,7 @@ struct openfec_rs_encoder
         params.nb_source_symbols = k;
         params.nb_repair_symbols = m;
         params.encoding_symbol_length = m_symbol_size;
-        params.N1 = 5;
+        params.N1 = 7;
         params.prng_seed = m_seed;
         if (of_set_fec_parameters(ses, (of_parameters_t*)&params))
         {
@@ -207,7 +207,7 @@ struct openfec_rs_decoder
         params.nb_source_symbols = k;
         params.nb_repair_symbols = m;
         params.encoding_symbol_length = m_symbol_size;
-        params.N1 = 5;
+        params.N1 = 7;
         params.prng_seed = encoder->m_seed;
         if (of_set_fec_parameters(ses, (of_parameters_t*)&params))
         {
