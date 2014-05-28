@@ -170,7 +170,10 @@ struct throughput_benchmark : public gauge::time_benchmark
     void decode_payloads()
     {
         m_decoder->decode_all(m_encoder);
-        m_decoded_symbols += m_encoder->payload_count();
+
+        gauge::config_set cs = get_current_configuration();
+        uint32_t encoded_symbols = cs.get_value<uint32_t>("encoded_symbols");
+        m_decoded_symbols += encoded_symbols;
     }
 
     /// Run the encoder
