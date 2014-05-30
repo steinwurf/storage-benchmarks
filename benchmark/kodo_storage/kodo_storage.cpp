@@ -42,6 +42,7 @@ struct storage_benchmark : public gauge::time_benchmark
 
     void start()
     {
+        m_processed_symbols = 0;
         gauge::time_benchmark::start();
     }
 
@@ -89,7 +90,20 @@ struct storage_benchmark : public gauge::time_benchmark
         if (!results.has_column("throughput"))
             results.add_column("throughput");
 
+        if (Relaxed && !results.has_column("overhead"))
+            results.add_column("overhead");
+
         results.set_value("throughput", measurement());
+
+        if (Relaxed)
+        {
+            gauge::config_set cs = get_current_configuration();
+            uint32_t encoded_symbols =
+                cs.get_value<uint32_t>("encoded_symbols");
+            double overhead =
+                (double)m_processed_symbols / encoded_symbols;
+            results.set_value("overhead", overhead);
+        }
     }
 
     bool accept_measurement()
@@ -239,6 +253,8 @@ struct storage_benchmark : public gauge::time_benchmark
         {
             m_decoder->decode(&m_payloads[i][0]);
 
+            m_processed_symbols++;
+
             if (m_decoder->is_complete())
             {
                 return;
@@ -353,6 +369,9 @@ protected:
     /// The decoder to use
     decoder_ptr m_decoder;
 
+    /// The number of symbols processed by the decoder
+    uint32_t m_processed_symbols;
+
     /// The input data
     std::vector<uint8_t> m_data_in;
 
@@ -416,7 +435,6 @@ public:
                             uint32_t encoded = (uint32_t)std::ceil(s * r);
                             cs.set_value<uint32_t>("encoded_symbols", encoded);
 
-                            // Add the calculated density
                             cs.set_value<double>("density", d);
 
                             Super::add_configuration(cs);
@@ -434,6 +452,75 @@ public:
         gauge::config_set cs = Super::get_current_configuration();
         double symbols = cs.get_value<double>("density");
         m_encoder->set_density(symbols);
+    }
+};
+
+/// A test block represents an encoder and decoder pair
+template<class Encoder, class Decoder, bool Relaxed = false>
+struct perpetual_storage_benchmark :
+    public storage_benchmark<Encoder,Decoder,Relaxed>
+{
+public:
+
+    /// The type of the base benchmark
+    typedef storage_benchmark<Encoder,Decoder,Relaxed> Super;
+
+    /// We need access to the encoder built to adjust the average number of
+    /// nonzero symbols
+    using Super::m_encoder;
+
+public:
+
+    void get_options(gauge::po::variables_map& options)
+    {
+        auto symbols = options["symbols"].as<std::vector<uint32_t> >();
+        auto redundancy = options["redundancy"].as<std::vector<double> >();
+        auto symbol_size = options["symbol_size"].as<std::vector<uint32_t> >();
+        auto types = options["type"].as<std::vector<std::string> >();
+        auto width_ratio = options["width_ratio"].as<std::vector<double> >();
+
+        assert(symbols.size() > 0);
+        assert(redundancy.size() > 0);
+        assert(symbol_size.size() > 0);
+        assert(types.size() > 0);
+        assert(width_ratio.size() > 0);
+
+        for (const auto& s : symbols)
+        {
+            for (const auto& r : redundancy)
+            {
+                for (const auto& p : symbol_size)
+                {
+                    for (const auto& t : types)
+                    {
+                        for (const auto& w: width_ratio)
+                        {
+                            gauge::config_set cs;
+                            cs.set_value<uint32_t>("symbols", s);
+                            cs.set_value<uint32_t>("symbol_size", p);
+                            cs.set_value<double>("redundancy", r);
+                            cs.set_value<std::string>("type", t);
+
+                            uint32_t encoded = (uint32_t)std::ceil(s * r);
+                            cs.set_value<uint32_t>("encoded_symbols", encoded);
+
+                            cs.set_value<double>("width_ratio", w);
+
+                            Super::add_configuration(cs);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    void setup()
+    {
+        Super::setup();
+
+        gauge::config_set cs = Super::get_current_configuration();
+        double width_ratio = cs.get_value<double>("width_ratio");
+        m_encoder->set_width_ratio(width_ratio);
     }
 };
 
@@ -504,6 +591,25 @@ BENCHMARK_OPTION(sparse_density_options)
 
     options.add_options()
         ("density", default_density, "Set the density of the sparse codes");
+
+    gauge::runner::instance().register_options(options);
+}
+
+BENCHMARK_OPTION(perpetual_options)
+{
+    gauge::po::options_description options;
+
+    std::vector<double> width_ratio;
+    width_ratio.push_back(0.05);
+    width_ratio.push_back(0.1);
+
+    auto default_width_ratio =
+        gauge::po::value<std::vector<double> >()->default_value(
+            width_ratio, "")->multitoken();
+
+    options.add_options()
+        ("width_ratio", default_width_ratio,
+        "Set the width for perpetual codes (in percentage)");
 
     gauge::runner::instance().register_options(options);
 }
@@ -592,7 +698,7 @@ BENCHMARK_F(setup_sparse_rlnc_throughput8, SparseFullRLNC, Binary8, 5)
 // Shallow Perpetual RLNC
 //------------------------------------------------------------------
 
-typedef sparse_storage_benchmark<
+typedef perpetual_storage_benchmark<
     kodo::shallow_perpetual_encoder<fifi::binary>,
     kodo::shallow_perpetual_decoder<fifi::binary>, true>
     setup_perpetual_throughput;
@@ -602,7 +708,7 @@ BENCHMARK_F(setup_perpetual_throughput, Perpetual, Binary, 5)
     run_benchmark();
 }
 
-typedef sparse_storage_benchmark<
+typedef perpetual_storage_benchmark<
     kodo::shallow_perpetual_encoder<fifi::binary8>,
     kodo::shallow_perpetual_decoder<fifi::binary8>, true>
     setup_perpetual_throughput8;
