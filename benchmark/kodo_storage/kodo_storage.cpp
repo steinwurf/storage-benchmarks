@@ -18,13 +18,14 @@
 #include <kodo/has_systematic_encoder.hpp>
 #include <kodo/set_systematic_off.hpp>
 #include <kodo/rlnc/full_rlnc_codes.hpp>
-#include <kodo/thread_encoder.hpp>
-#include <kodo/thread_decoder.hpp>
+#include <kodo/rlnc/perpetual_codes.hpp>
+// #include <kodo/thread_encoder.hpp>
+// #include <kodo/thread_decoder.hpp>
 
 #include <tables/table.hpp>
 
 /// A test block represents an encoder and decoder pair
-template<class Encoder, class Decoder>
+template<class Encoder, class Decoder, bool Relaxed = false>
 struct storage_benchmark : public gauge::time_benchmark
 {
     typedef typename Encoder::factory encoder_factory;
@@ -35,6 +36,7 @@ struct storage_benchmark : public gauge::time_benchmark
 
     void init()
     {
+        m_factor = 1;
         gauge::time_benchmark::init();
     }
 
@@ -61,13 +63,14 @@ struct storage_benchmark : public gauge::time_benchmark
         // The number of bytes {en|de}coded
         uint64_t total_bytes = 0;
 
-        if(type == "decoder")
+        if (type == "decoder")
         {
             total_bytes = encoded_symbols * symbol_size;
         }
-        else if(type == "encoder")
+        else if (type == "encoder")
         {
-            total_bytes = encoded_symbols * symbol_size;
+            uint32_t payload_count = m_payloads.size();
+            total_bytes = payload_count * symbol_size;
         }
         else
         {
@@ -83,7 +86,7 @@ struct storage_benchmark : public gauge::time_benchmark
 
     void store_run(tables::table& results)
     {
-        if(!results.has_column("throughput"))
+        if (!results.has_column("throughput"))
             results.add_column("throughput");
 
         results.set_value("throughput", measurement());
@@ -101,11 +104,16 @@ struct storage_benchmark : public gauge::time_benchmark
             // the measurement if the decoding was successful
             if (!m_decoder->is_complete())
             {
+                // We did not generate enough payloads to decode successfully,
+                // so we will generate more payloads for next run
+                if (Relaxed == true)
+                    ++m_factor;
+
                 return false;
             }
+
             // At this point, the output data should be equal to the input data
-            assert(std::equal(m_data_out.begin(), m_data_out.end(),
-                              m_data_in.begin()));
+            assert(m_data_out == m_data_in);
         }
 
         // Force only one iteration
@@ -195,7 +203,8 @@ struct storage_benchmark : public gauge::time_benchmark
         m_decoder->set_symbols(sak::storage(m_data_out));
 
         // Prepare storage for the encoded payloads
-        uint32_t payload_count = encoded_symbols;
+        uint32_t payload_count = encoded_symbols * m_factor;
+        assert(payload_count > 0);
 
         m_payloads.resize(payload_count);
         for (uint32_t i = 0; i < payload_count; ++i)
@@ -352,18 +361,21 @@ protected:
 
     /// Storage for encoded symbols
     std::vector< std::vector<uint8_t> > m_payloads;
+
+    /// Multiplication factor for payload_count
+    uint32_t m_factor;
 };
 
 
 /// A test block represents an encoder and decoder pair
-template<class Encoder, class Decoder>
+template<class Encoder, class Decoder, bool Relaxed = false>
 struct sparse_storage_benchmark :
-    public storage_benchmark<Encoder,Decoder>
+    public storage_benchmark<Encoder,Decoder,Relaxed>
 {
 public:
 
     /// The type of the base benchmark
-    typedef storage_benchmark<Encoder,Decoder> Super;
+    typedef storage_benchmark<Encoder,Decoder,Relaxed> Super;
 
     /// We need access to the encoder built to adjust the average number of
     /// nonzero symbols
@@ -468,7 +480,7 @@ BENCHMARK_OPTION(throughput_options)
         ("symbols", default_symbols, "Set the number of symbols");
 
     options.add_options()
-        ("redundancy", default_redundancy, "Set the ratio of repair symbols");
+        ("redundancy", default_redundancy, "Set the ratio of erased symbols");
 
     options.add_options()
         ("symbol_size", default_symbol_size, "Set the symbol size in bytes");
@@ -514,25 +526,25 @@ BENCHMARK_F(setup_rlnc_throughput8, FullRLNC, Binary8, 5)
 // Threaded RLNC
 //------------------------------------------------------------------
 
-typedef storage_benchmark<
-    kodo::thread_encoder<fifi::binary8>,
-    kodo::thread_decoder<fifi::binary8>>
-    setup_thread_throughput8;
-
-BENCHMARK_F(setup_thread_throughput8, Thread, Binary8, 5)
-{
-    run_benchmark();
-}
-
-typedef sparse_storage_benchmark<
-    kodo::sparse_thread_encoder<fifi::binary8>,
-    kodo::thread_decoder<fifi::binary8>>
-    setup_sparse_thread_throughput8;
-
-BENCHMARK_F(setup_sparse_thread_throughput8, SparseThread, Binary8, 5)
-{
-    run_benchmark();
-}
+// typedef storage_benchmark<
+//     kodo::thread_encoder<fifi::binary8>,
+//     kodo::thread_decoder<fifi::binary8>>
+//     setup_thread_throughput8;
+//
+// BENCHMARK_F(setup_thread_throughput8, Thread, Binary8, 5)
+// {
+//     run_benchmark();
+// }
+//
+// typedef sparse_storage_benchmark<
+//     kodo::sparse_thread_encoder<fifi::binary8>,
+//     kodo::thread_decoder<fifi::binary8>>
+//     setup_sparse_thread_throughput8;
+//
+// BENCHMARK_F(setup_sparse_thread_throughput8, SparseThread, Binary8, 5)
+// {
+//     run_benchmark();
+// }
 
 //------------------------------------------------------------------
 // BackwardFullRLNC
@@ -572,6 +584,30 @@ typedef sparse_storage_benchmark<
     setup_sparse_rlnc_throughput8;
 
 BENCHMARK_F(setup_sparse_rlnc_throughput8, SparseFullRLNC, Binary8, 5)
+{
+    run_benchmark();
+}
+
+//------------------------------------------------------------------
+// Shallow Perpetual RLNC
+//------------------------------------------------------------------
+
+typedef sparse_storage_benchmark<
+    kodo::shallow_perpetual_encoder<fifi::binary>,
+    kodo::shallow_perpetual_decoder<fifi::binary>, true>
+    setup_perpetual_throughput;
+
+BENCHMARK_F(setup_perpetual_throughput, Perpetual, Binary, 5)
+{
+    run_benchmark();
+}
+
+typedef sparse_storage_benchmark<
+    kodo::shallow_perpetual_encoder<fifi::binary8>,
+    kodo::shallow_perpetual_decoder<fifi::binary8>, true>
+    setup_perpetual_throughput8;
+
+BENCHMARK_F(setup_perpetual_throughput8, Perpetual, Binary8, 5)
 {
     run_benchmark();
 }
