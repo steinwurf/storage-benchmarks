@@ -24,7 +24,8 @@ struct throughput_benchmark : public gauge::time_benchmark
     void start()
     {
         m_encoded_symbols = 0;
-        m_decoded_symbols = 0;
+        m_recovered_symbols = 0;
+        m_processed_symbols = 0;
         gauge::time_benchmark::start();
     }
 
@@ -49,7 +50,7 @@ struct throughput_benchmark : public gauge::time_benchmark
 
         if (type == "decoder")
         {
-            total_bytes = m_decoded_symbols * symbol_size;
+            total_bytes = m_recovered_symbols * symbol_size;
         }
         else if (type == "encoder")
         {
@@ -69,10 +70,18 @@ struct throughput_benchmark : public gauge::time_benchmark
 
     void store_run(tables::table& results)
     {
-        if(!results.has_column("throughput"))
-            results.add_column("throughput");
+        if (!results.has_column("goodput"))
+            results.add_column("goodput");
 
-        results.set_value("throughput", measurement());
+        if (!results.has_column("overhead"))
+            results.add_column("overhead");
+
+        results.set_value("goodput", measurement());
+
+        gauge::config_set cs = get_current_configuration();
+        uint32_t encoded_symbols = cs.get_value<uint32_t>("encoded_symbols");
+        double overhead = (double)m_processed_symbols / encoded_symbols;
+        results.set_value("overhead", overhead);
     }
 
     bool needs_warmup_iteration()
@@ -169,11 +178,15 @@ struct throughput_benchmark : public gauge::time_benchmark
 
     void decode_payloads()
     {
-        m_decoder->decode_all(m_encoder);
+        m_processed_symbols += m_decoder->decode_all(m_encoder);
 
         gauge::config_set cs = get_current_configuration();
         uint32_t encoded_symbols = cs.get_value<uint32_t>("encoded_symbols");
-        m_decoded_symbols += encoded_symbols;
+
+        if (m_decoder->is_complete())
+        {
+            m_recovered_symbols += encoded_symbols;
+        }
     }
 
     /// Run the encoder
@@ -232,7 +245,10 @@ protected:
     uint32_t m_encoded_symbols;
 
     /// The number of symbols decoded
-    uint32_t m_decoded_symbols;
+    uint32_t m_recovered_symbols;
+
+    /// The number of symbols processed by the decoder
+    uint32_t m_processed_symbols;
 
     /// Multiplication factor for payload_count
     uint32_t m_factor;

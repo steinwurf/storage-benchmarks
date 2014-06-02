@@ -170,7 +170,7 @@ struct reed_sol_van_decoder
         if (matrix) { free(matrix); matrix = 0; }
     }
 
-    void decode_all(std::shared_ptr<reed_sol_van_encoder> encoder)
+    uint32_t decode_all(std::shared_ptr<reed_sol_van_encoder> encoder)
     {
         assert(matrix != 0);
         uint32_t payload_count = encoder->m_payloads.size();
@@ -196,6 +196,8 @@ struct reed_sol_van_decoder
         m_decoding_result =
             jerasure_matrix_decode(k, m, w, matrix, 1, &erasures[0], &data[0],
                                    &coding[0], m_symbol_size);
+
+        return payload_count;
     }
 
     bool verify_data(std::shared_ptr<reed_sol_van_encoder> encoder)

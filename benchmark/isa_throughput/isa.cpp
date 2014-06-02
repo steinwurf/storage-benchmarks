@@ -166,7 +166,7 @@ struct isa_decoder
         }
     }
 
-    void decode_all(std::shared_ptr<isa_encoder> encoder)
+    uint32_t decode_all(std::shared_ptr<isa_encoder> encoder)
     {
         uint32_t payload_count = encoder->payload_count();
         assert(payload_count == (uint32_t)(m - k));
@@ -186,7 +186,7 @@ struct isa_decoder
         {
             printf("BAD MATRIX\n");
             m_decoding_result = -1;
-            return;
+            return 0;
         }
 
         // Set data pointers to point to the encoder payloads
@@ -208,6 +208,8 @@ struct isa_decoder
         ec_encode_data_sse(m_symbol_size,
             k, nerrs, g_tbls, &data[0], &m_buffs[0]);
         m_decoding_result = 0;
+
+        return payload_count;
     }
 
     bool verify_data(std::shared_ptr<isa_encoder> encoder)

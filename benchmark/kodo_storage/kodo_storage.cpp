@@ -87,13 +87,13 @@ struct storage_benchmark : public gauge::time_benchmark
 
     void store_run(tables::table& results)
     {
-        if (!results.has_column("throughput"))
-            results.add_column("throughput");
+        if (!results.has_column("goodput"))
+            results.add_column("goodput");
 
         if (Relaxed && !results.has_column("overhead"))
             results.add_column("overhead");
 
-        results.set_value("throughput", measurement());
+        results.set_value("goodput", measurement());
 
         if (Relaxed)
         {

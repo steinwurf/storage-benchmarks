@@ -185,8 +185,9 @@ struct openfec_rs_decoder
         return (void*)&(self->m_data[esi][0]);
     }
 
-    void decode_all(std::shared_ptr<openfec_rs_encoder> encoder)
+    uint32_t decode_all(std::shared_ptr<openfec_rs_encoder> encoder)
     {
+        uint32_t processed_symbols = 0;
         int payload_count = (int)encoder->payload_count();
         assert(payload_count == m);
 
@@ -200,6 +201,7 @@ struct openfec_rs_decoder
             of_verbosity))
         {
             printf("of_create_codec_instance() failed\n");
+            return 0;
         }
 
         //of_rs_parameters_t params;
@@ -212,6 +214,7 @@ struct openfec_rs_decoder
         if (of_set_fec_parameters(ses, (of_parameters_t*)&params))
         {
             printf("of_set_fec_parameters() failed\n");
+            return 0;
         }
 
         // The decoder uses pre-allocated data buffers to avoid unnecessary
@@ -230,6 +233,9 @@ struct openfec_rs_decoder
                 printf("of_decode_with_new_symbol() failed\n");
             }
 
+            // Only count repair symbols
+            if (i >= k) processed_symbols++;
+
             if (of_is_decoding_complete(ses) == true)
             {
                 m_decoding_result = 0;
@@ -242,6 +248,8 @@ struct openfec_rs_decoder
         {
             printf("of_release_codec_instance() failed\n");
         }
+
+        return processed_symbols;
     }
 
     bool verify_data(std::shared_ptr<openfec_rs_encoder> encoder)
