@@ -59,14 +59,14 @@ struct storage_benchmark : public gauge::time_benchmark
         gauge::config_set cs = get_current_configuration();
         std::string type = cs.get_value<std::string>("type");
         uint32_t symbol_size = cs.get_value<uint32_t>("symbol_size");
-        uint32_t encoded_symbols = cs.get_value<uint32_t>("encoded_symbols");
+        uint32_t erased_symbols = cs.get_value<uint32_t>("erased_symbols");
 
         // The number of bytes {en|de}coded
         uint64_t total_bytes = 0;
 
         if (type == "decoder")
         {
-            total_bytes = encoded_symbols * symbol_size;
+            total_bytes = erased_symbols * symbol_size;
         }
         else if (type == "encoder")
         {
@@ -90,19 +90,17 @@ struct storage_benchmark : public gauge::time_benchmark
         if (!results.has_column("goodput"))
             results.add_column("goodput");
 
-        if (Relaxed && !results.has_column("overhead"))
-            results.add_column("overhead");
+        if (Relaxed && !results.has_column("extra_symbols"))
+            results.add_column("extra_symbols");
 
         results.set_value("goodput", measurement());
 
         if (Relaxed)
         {
             gauge::config_set cs = get_current_configuration();
-            uint32_t encoded_symbols =
-                cs.get_value<uint32_t>("encoded_symbols");
-            double overhead =
-                (double)m_processed_symbols / encoded_symbols;
-            results.set_value("overhead", overhead);
+            uint32_t erased_symbols = cs.get_value<uint32_t>("erased_symbols");
+            uint32_t extra_symbols = m_processed_symbols - erased_symbols;
+            results.set_value("extra_symbols", extra_symbols);
         }
     }
 
@@ -166,8 +164,8 @@ struct storage_benchmark : public gauge::time_benchmark
                         cs.set_value<double>("redundancy", r);
                         cs.set_value<std::string>("type", t);
 
-                        uint32_t encoded = (uint32_t)std::ceil(s * r);
-                        cs.set_value<uint32_t>("encoded_symbols", encoded);
+                        uint32_t erased = (uint32_t)std::ceil(s * r);
+                        cs.set_value<uint32_t>("erased_symbols", erased);
 
                         add_configuration(cs);
                     }
@@ -182,7 +180,7 @@ struct storage_benchmark : public gauge::time_benchmark
 
         uint32_t symbols = cs.get_value<uint32_t>("symbols");
         uint32_t symbol_size = cs.get_value<uint32_t>("symbol_size");
-        uint32_t encoded_symbols = cs.get_value<uint32_t>("encoded_symbols");
+        uint32_t erased_symbols = cs.get_value<uint32_t>("erased_symbols");
 
         // Make the factories fit perfectly otherwise there seems to
         // be problems with memory access i.e. when using a factory
@@ -217,7 +215,7 @@ struct storage_benchmark : public gauge::time_benchmark
         m_decoder->set_symbols(sak::storage(m_data_out));
 
         // Prepare storage for the encoded payloads
-        uint32_t payload_count = encoded_symbols * m_factor;
+        uint32_t payload_count = erased_symbols * m_factor;
         assert(payload_count > 0);
 
         m_payloads.resize(payload_count);
@@ -290,7 +288,7 @@ struct storage_benchmark : public gauge::time_benchmark
         encode_payloads();
 
         gauge::config_set cs = get_current_configuration();
-        uint32_t encoded_symbols = cs.get_value<uint32_t>("encoded_symbols");
+        uint32_t erased_symbols = cs.get_value<uint32_t>("erased_symbols");
         uint32_t symbols = cs.get_value<uint32_t>("symbols");
         uint32_t symbol_size = cs.get_value<uint32_t>("symbol_size");
 
@@ -299,7 +297,7 @@ struct storage_benchmark : public gauge::time_benchmark
         // Randomly delete original symbols that will be restored by processing
         // the encoded symbols
         std::set<uint32_t> erased;
-        while (erased.size() < encoded_symbols)
+        while (erased.size() < erased_symbols)
         {
             uint32_t random_symbol = rand() % symbols;
             auto ret = erased.insert(random_symbol);
@@ -432,8 +430,8 @@ public:
                             cs.set_value<double>("redundancy", r);
                             cs.set_value<std::string>("type", t);
 
-                            uint32_t encoded = (uint32_t)std::ceil(s * r);
-                            cs.set_value<uint32_t>("encoded_symbols", encoded);
+                            uint32_t erased = (uint32_t)std::ceil(s * r);
+                            cs.set_value<uint32_t>("erased_symbols", erased);
 
                             cs.set_value<double>("density", d);
 
@@ -501,8 +499,8 @@ public:
                             cs.set_value<double>("redundancy", r);
                             cs.set_value<std::string>("type", t);
 
-                            uint32_t encoded = (uint32_t)std::ceil(s * r);
-                            cs.set_value<uint32_t>("encoded_symbols", encoded);
+                            uint32_t erased = (uint32_t)std::ceil(s * r);
+                            cs.set_value<uint32_t>("erased_symbols", erased);
 
                             cs.set_value<double>("width_ratio", w);
 
