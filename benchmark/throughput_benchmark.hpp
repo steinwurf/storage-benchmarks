@@ -151,8 +151,8 @@ struct throughput_benchmark : public gauge::time_benchmark
                         cs.set_value<double>("loss_rate", r);
                         cs.set_value<std::string>("type", t);
 
-                        uint32_t encoded = (uint32_t)std::ceil(s * r);
-                        cs.set_value<uint32_t>("encoded_symbols", encoded);
+                        uint32_t erased = (uint32_t)std::ceil(s * r);
+                        cs.set_value<uint32_t>("erased_symbols", erased);
 
                         add_configuration(cs);
                     }
@@ -167,12 +167,12 @@ struct throughput_benchmark : public gauge::time_benchmark
 
         uint32_t symbols = cs.get_value<uint32_t>("symbols");
         uint32_t symbol_size = cs.get_value<uint32_t>("symbol_size");
-        uint32_t encoded_symbols = cs.get_value<uint32_t>("encoded_symbols");
+        uint32_t erased_symbols = cs.get_value<uint32_t>("erased_symbols");
 
         m_encoder = std::make_shared<Encoder>(
-            symbols, symbol_size, encoded_symbols);
+            symbols, symbol_size, erased_symbols);
         m_decoder = std::make_shared<Decoder>(
-            symbols, symbol_size, encoded_symbols);
+            symbols, symbol_size, erased_symbols);
     }
 
     void encode_payloads()
@@ -186,11 +186,11 @@ struct throughput_benchmark : public gauge::time_benchmark
         m_processed_symbols += m_decoder->decode_all(m_encoder);
 
         gauge::config_set cs = get_current_configuration();
-        uint32_t encoded_symbols = cs.get_value<uint32_t>("encoded_symbols");
+        uint32_t erased_symbols = cs.get_value<uint32_t>("erased_symbols");
 
         if (m_decoder->is_complete())
         {
-            m_recovered_symbols += encoded_symbols;
+            m_recovered_symbols += erased_symbols;
         }
     }
 
