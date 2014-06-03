@@ -310,12 +310,12 @@ BENCHMARK_OPTION(throughput_options)
         gauge::po::value<std::vector<uint32_t> >()->default_value(
             symbols, "")->multitoken();
 
-    std::vector<double> redundancy;
-    redundancy.push_back(0.5);
+    std::vector<double> loss_rate;
+    loss_rate.push_back(0.5);
 
-    auto default_redundancy =
+    auto default_loss_rate =
         gauge::po::value<std::vector<double>>()->default_value(
-            redundancy, "")->multitoken();
+            loss_rate, "")->multitoken();
 
     // Symbol size must be a multiple of 32
     std::vector<uint32_t> symbol_size;
@@ -337,7 +337,7 @@ BENCHMARK_OPTION(throughput_options)
         ("symbols", default_symbols, "Set the number of symbols");
 
     options.add_options()
-        ("redundancy", default_redundancy, "Set the ratio of repair symbols");
+        ("loss_rate", default_loss_rate, "Set the ratio of repair symbols");
 
     options.add_options()
         ("symbol_size", default_symbol_size, "Set the symbol size in bytes");

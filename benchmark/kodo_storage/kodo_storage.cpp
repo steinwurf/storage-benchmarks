@@ -147,12 +147,12 @@ struct storage_benchmark : public gauge::time_benchmark
     void get_options(gauge::po::variables_map& options)
     {
         auto symbols = options["symbols"].as<std::vector<uint32_t>>();
-        auto redundancy = options["redundancy"].as<std::vector<double>>();
+        auto loss_rate = options["loss_rate"].as<std::vector<double>>();
         auto symbol_size = options["symbol_size"].as<std::vector<uint32_t>>();
         auto types = options["type"].as<std::vector<std::string>>();
 
         assert(symbols.size() > 0);
-        assert(redundancy.size() > 0);
+        assert(loss_rate.size() > 0);
         assert(symbol_size.size() > 0);
         assert(types.size() > 0);
 
@@ -160,14 +160,14 @@ struct storage_benchmark : public gauge::time_benchmark
         {
             for (const auto& p : symbol_size)
             {
-                for (const auto& r : redundancy)
+                for (const auto& r : loss_rate)
                 {
                     for (const auto& t : types)
                     {
                         gauge::config_set cs;
                         cs.set_value<uint32_t>("symbols", s);
                         cs.set_value<uint32_t>("symbol_size", p);
-                        cs.set_value<double>("redundancy", r);
+                        cs.set_value<double>("loss_rate", r);
                         cs.set_value<std::string>("type", t);
 
                         uint32_t erased = (uint32_t)std::ceil(s * r);
@@ -409,20 +409,20 @@ public:
     void get_options(gauge::po::variables_map& options)
     {
         auto symbols = options["symbols"].as<std::vector<uint32_t> >();
-        auto redundancy = options["redundancy"].as<std::vector<double> >();
+        auto loss_rate = options["loss_rate"].as<std::vector<double> >();
         auto symbol_size = options["symbol_size"].as<std::vector<uint32_t> >();
         auto types = options["type"].as<std::vector<std::string> >();
         auto density = options["density"].as<std::vector<double> >();
 
         assert(symbols.size() > 0);
-        assert(redundancy.size() > 0);
+        assert(loss_rate.size() > 0);
         assert(symbol_size.size() > 0);
         assert(types.size() > 0);
         assert(density.size() > 0);
 
         for (const auto& s : symbols)
         {
-            for (const auto& r : redundancy)
+            for (const auto& r : loss_rate)
             {
                 for (const auto& p : symbol_size)
                 {
@@ -433,7 +433,7 @@ public:
                             gauge::config_set cs;
                             cs.set_value<uint32_t>("symbols", s);
                             cs.set_value<uint32_t>("symbol_size", p);
-                            cs.set_value<double>("redundancy", r);
+                            cs.set_value<double>("loss_rate", r);
                             cs.set_value<std::string>("type", t);
 
                             uint32_t erased = (uint32_t)std::ceil(s * r);
@@ -478,20 +478,20 @@ public:
     void get_options(gauge::po::variables_map& options)
     {
         auto symbols = options["symbols"].as<std::vector<uint32_t> >();
-        auto redundancy = options["redundancy"].as<std::vector<double> >();
+        auto loss_rate = options["loss_rate"].as<std::vector<double> >();
         auto symbol_size = options["symbol_size"].as<std::vector<uint32_t> >();
         auto types = options["type"].as<std::vector<std::string> >();
         auto width_ratio = options["width_ratio"].as<std::vector<double> >();
 
         assert(symbols.size() > 0);
-        assert(redundancy.size() > 0);
+        assert(loss_rate.size() > 0);
         assert(symbol_size.size() > 0);
         assert(types.size() > 0);
         assert(width_ratio.size() > 0);
 
         for (const auto& s : symbols)
         {
-            for (const auto& r : redundancy)
+            for (const auto& r : loss_rate)
             {
                 for (const auto& p : symbol_size)
                 {
@@ -502,7 +502,7 @@ public:
                             gauge::config_set cs;
                             cs.set_value<uint32_t>("symbols", s);
                             cs.set_value<uint32_t>("symbol_size", p);
-                            cs.set_value<double>("redundancy", r);
+                            cs.set_value<double>("loss_rate", r);
                             cs.set_value<std::string>("type", t);
 
                             uint32_t erased = (uint32_t)std::ceil(s * r);
@@ -545,12 +545,12 @@ BENCHMARK_OPTION(throughput_options)
         gauge::po::value<std::vector<uint32_t>>()->default_value(
             symbols, "")->multitoken();
 
-    std::vector<double> redundancy;
-    redundancy.push_back(0.5);
+    std::vector<double> loss_rate;
+    loss_rate.push_back(0.5);
 
-    auto default_redundancy =
+    auto default_loss_rate =
         gauge::po::value<std::vector<double>>()->default_value(
-            redundancy, "")->multitoken();
+            loss_rate, "")->multitoken();
 
     std::vector<uint32_t> symbol_size;
     symbol_size.push_back(1000000);
@@ -571,7 +571,7 @@ BENCHMARK_OPTION(throughput_options)
         ("symbols", default_symbols, "Set the number of symbols");
 
     options.add_options()
-        ("redundancy", default_redundancy, "Set the ratio of erased symbols");
+        ("loss_rate", default_loss_rate, "Set the ratio of erased symbols");
 
     options.add_options()
         ("symbol_size", default_symbol_size, "Set the symbol size in bytes");
@@ -690,7 +690,7 @@ BENCHMARK_F(setup_delayed_rlnc_throughput8, FullDelayedRLNC, Binary8, 5)
 
 typedef sparse_storage_benchmark<
     kodo::shallow_sparse_full_rlnc_encoder<fifi::binary8>,
-    kodo::shallow_full_rlnc_decoder<fifi::binary8>>
+    kodo::shallow_full_rlnc_decoder<fifi::binary8>, true>
     setup_sparse_rlnc_throughput8;
 
 BENCHMARK_F(setup_sparse_rlnc_throughput8, SparseFullRLNC, Binary8, 5)

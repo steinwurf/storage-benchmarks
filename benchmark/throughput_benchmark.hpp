@@ -125,18 +125,18 @@ struct throughput_benchmark : public gauge::time_benchmark
     void get_options(gauge::po::variables_map& options)
     {
         auto symbols = options["symbols"].as<std::vector<uint32_t> >();
-        auto redundancy = options["redundancy"].as<std::vector<double> >();
+        auto loss_rate = options["loss_rate"].as<std::vector<double> >();
         auto symbol_size = options["symbol_size"].as<std::vector<uint32_t> >();
         auto types = options["type"].as<std::vector<std::string> >();
 
         assert(symbols.size() > 0);
-        assert(redundancy.size() > 0);
+        assert(loss_rate.size() > 0);
         assert(symbol_size.size() > 0);
         assert(types.size() > 0);
 
         for (const auto& s : symbols)
         {
-            for (const auto& r : redundancy)
+            for (const auto& r : loss_rate)
             {
                 for (const auto& p : symbol_size)
                 {
@@ -148,7 +148,7 @@ struct throughput_benchmark : public gauge::time_benchmark
                         gauge::config_set cs;
                         cs.set_value<uint32_t>("symbols", s);
                         cs.set_value<uint32_t>("symbol_size", p);
-                        cs.set_value<double>("redundancy", r);
+                        cs.set_value<double>("loss_rate", r);
                         cs.set_value<std::string>("type", t);
 
                         uint32_t encoded = (uint32_t)std::ceil(s * r);
