@@ -73,15 +73,20 @@ struct throughput_benchmark : public gauge::time_benchmark
         if (!results.has_column("goodput"))
             results.add_column("goodput");
 
-        if (!results.has_column("overhead"))
-            results.add_column("overhead");
-
         results.set_value("goodput", measurement());
 
         gauge::config_set cs = get_current_configuration();
-        uint32_t encoded_symbols = cs.get_value<uint32_t>("encoded_symbols");
-        double overhead = (double)m_processed_symbols / encoded_symbols;
-        results.set_value("overhead", overhead);
+        std::string type = cs.get_value<std::string>("type");
+
+        if (type == "decoder")
+        {
+            if (!results.has_column("extra_symbols"))
+                results.add_column("extra_symbols");
+
+            uint32_t erased_symbols = cs.get_value<uint32_t>("erased_symbols");
+            uint32_t extra_symbols = m_processed_symbols - erased_symbols;
+            results.set_value("extra_symbols", extra_symbols);
+        }
     }
 
     bool needs_warmup_iteration()
@@ -95,7 +100,7 @@ struct throughput_benchmark : public gauge::time_benchmark
 
         std::string type = cs.get_value<std::string>("type");
 
-        if(type == "decoder")
+        if (type == "decoder")
         {
             // If we are benchmarking a decoder, we only accept
             // the measurement if the decoding was successful

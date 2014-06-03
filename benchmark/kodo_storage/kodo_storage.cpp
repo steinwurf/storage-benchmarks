@@ -90,17 +90,23 @@ struct storage_benchmark : public gauge::time_benchmark
         if (!results.has_column("goodput"))
             results.add_column("goodput");
 
-        if (Relaxed && !results.has_column("extra_symbols"))
-            results.add_column("extra_symbols");
-
         results.set_value("goodput", measurement());
 
         if (Relaxed)
         {
             gauge::config_set cs = get_current_configuration();
-            uint32_t erased_symbols = cs.get_value<uint32_t>("erased_symbols");
-            uint32_t extra_symbols = m_processed_symbols - erased_symbols;
-            results.set_value("extra_symbols", extra_symbols);
+            std::string type = cs.get_value<std::string>("type");
+
+            if (type == "decoder")
+            {
+                if (!results.has_column("extra_symbols"))
+                    results.add_column("extra_symbols");
+
+                uint32_t erased_symbols =
+                    cs.get_value<uint32_t>("erased_symbols");
+                uint32_t extra_symbols = m_processed_symbols - erased_symbols;
+                results.set_value("extra_symbols", extra_symbols);
+            }
         }
     }
 
