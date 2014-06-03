@@ -29,9 +29,9 @@ struct openfec_rs_encoder
         m_symbols(symbols), m_symbol_size(symbol_size)
     {
         k = m_symbols;
-        m = encoded_symbols * 2;
+        m = encoded_symbols * 3;
         m_block_size = m_symbols * m_symbol_size;
-        m_payload_count = encoded_symbols * 2;
+        m_payload_count = encoded_symbols * 3;
 
         int i;
         int vector_count = k + m;
@@ -150,7 +150,7 @@ struct openfec_rs_decoder
         m_symbols(symbols), m_symbol_size(symbol_size)
     {
         k = m_symbols;
-        m = encoded_symbols * 2;
+        m = encoded_symbols * 3;
         m_block_size = m_symbols * m_symbol_size;
         m_decoding_result = -1;
         uint32_t payload_count = encoded_symbols;
