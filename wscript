@@ -36,7 +36,7 @@ def options(opt):
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='fifi',
         git_repository='github.com/steinwurf/fifi.git',
-        major_version=11))
+        major_version=12))
 
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='kodo',
@@ -51,7 +51,7 @@ def options(opt):
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='sak',
         git_repository='github.com/steinwurf/sak.git',
-        major_version=10))
+        major_version=11))
 
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='tables',
