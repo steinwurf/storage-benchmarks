@@ -2,7 +2,7 @@ Introduction
 ============
 
 The storage-benchmarks repository is used for the performance comparison of
-different erasure coding libraries.
+different erasure coding libraries, currently Jerasure, OpenFEC and Intels ISA.
 
 Installation
 =============
