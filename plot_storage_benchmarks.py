@@ -63,41 +63,41 @@ ph.plot_metric(df_all_sparse,'goodput','symbols',
               ['symbol_size','loss_rate','type'],
               ['testcase','density'],'sparse')
 
-#ph.plot_metric(df_all_dense,'goodput','symbols',
-#               ['symbol_size','loss_rate','type'],
-#               ['testcase','density'],'dense')
-#
-##Goodput dataframe vs. symbol size (Fixed: symbols, loss rate, type)
-#ph.plot_metric(df_all_sparse,'goodput','symbol_size',
-#               ['symbols','loss_rate','type'],
-#               ['testcase','density'],'sparse')
-#
-#ph.plot_metric(df_all_dense,'goodput','symbol_size',
-#               ['symbols','loss_rate','type'],
-#               ['testcase','density'],'dense')
-#
-##Goodput dataframe vs. loss rate (Fixed: symbols, loss rate, type)
-#ph.plot_metric(df_all_sparse,'goodput','loss_rate',
-#               ['symbol_size','symbols','type'],
-#               ['testcase','density'],'sparse')
-#
-#ph.plot_metric(df_all_dense,'goodput','loss_rate',
-#               ['symbol_size','symbols','type'],
-#               ['testcase','density'],'dense')
-#
-##Goodput dataframe vs. erased symbols (Fixed: symbol size, loss rate, type)
-#ph.plot_metric(df_all_sparse,'goodput','erased_symbols',
-#               ['symbol_size','symbols','type'],
-#               ['testcase','density'],'sparse')
-#
-#ph.plot_metric(df_all_dense,'goodput','erased_symbols',
-#               ['symbol_size','symbols','type'],
-#               ['testcase','density'],'dense')
-#
-##Dataframe for checking linear dependency (overhead)
-#df_linear_dependency = df_all_sparse[df_all_sparse['type'] == "decoder"]
-#
-##Goodput dataframe vs. erased symbols (Fixed: symbol size, loss rate, type)
-#ph.plot_metric(df_linear_dependency,'extra_symbols','symbols',
-#               ['symbol_size','loss_rate'],
-#               ['testcase','density'],'sparse')
+ph.plot_metric(df_all_dense,'goodput','symbols',
+               ['symbol_size','loss_rate','type'],
+               ['testcase','density'],'dense')
+
+#Goodput dataframe vs. symbol size (Fixed: symbols, loss rate, type)
+ph.plot_metric(df_all_sparse,'goodput','symbol_size',
+               ['symbols','loss_rate','type'],
+               ['testcase','density'],'sparse')
+
+ph.plot_metric(df_all_dense,'goodput','symbol_size',
+               ['symbols','loss_rate','type'],
+               ['testcase','density'],'dense')
+
+#Goodput dataframe vs. loss rate (Fixed: symbols, loss rate, type)
+ph.plot_metric(df_all_sparse,'goodput','loss_rate',
+               ['symbol_size','symbols','type'],
+               ['testcase','density'],'sparse')
+
+ph.plot_metric(df_all_dense,'goodput','loss_rate',
+               ['symbol_size','symbols','type'],
+               ['testcase','density'],'dense')
+
+#Goodput dataframe vs. erased symbols (Fixed: symbol size, loss rate, type)
+ph.plot_metric(df_all_sparse,'goodput','erased_symbols',
+               ['symbol_size','symbols','type'],
+               ['testcase','density'],'sparse')
+
+ph.plot_metric(df_all_dense,'goodput','erased_symbols',
+               ['symbol_size','symbols','type'],
+               ['testcase','density'],'dense')
+
+#Dataframe for checking linear dependency (overhead)
+df_linear_dependency = df_all_sparse[df_all_sparse['type'] == "decoder"]
+
+#Goodput dataframe vs. erased symbols (Fixed: symbol size, loss rate, type)
+ph.plot_metric(df_linear_dependency,'extra_symbols','symbols',
+               ['symbol_size','loss_rate'],
+               ['testcase','density'],'sparse')

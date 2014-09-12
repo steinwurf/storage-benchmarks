@@ -7,7 +7,7 @@ Created on Fri Sep 12 20:41:09 2014
 
 import matplotlib.pyplot as plt
 import scipy as sp
-import os
+from matplotlib.backends.backend_pdf import PdfPages as pp
 
 xlabel_names = { 'symbol_size' : r"$Symbol\ Size\ [KB]$",
                  'symbols' : r"$Symbols$",
@@ -168,14 +168,17 @@ def get_filename(metric,varying_parameter,fixed_parameters,keys,density):
         fixed_values += "_" + fixed + "_" + \
                         str(keys[fixed_parameters.index(fixed)])
 
-    filename = os.path.abspath('.') + "/" + density + "_" + metric + "_" + \
-               varying_parameter + fixed_values + ".pdf"
+    filename = density + "_" + metric + "_" + varying_parameter + \
+               fixed_values + ".pdf"
     return filename
 
 
 def plot_metric(df,metric,varying_parameter,fixed_parameters,cases,density):
 
     df_group = df.groupby(by=fixed_parameters)
+    all_figures_filename = "all_" + density + "_" + metric + "_vs_" + \
+                           varying_parameter + ".pdf"
+    pdf = pp(all_figures_filename)
     for keys, group in df_group:
 
         p = group.pivot_table(metric,cols=cases,rows=varying_parameter).plot(
@@ -184,9 +187,13 @@ def plot_metric(df,metric,varying_parameter,fixed_parameters,cases,density):
         plt.title(get_plot_title(fixed_parameters,keys),fontsize=font_size)
         set_axis_properties(p,metric,varying_parameter,group)
         set_plot_legend(p,metric,varying_parameter)
-#        filename = get_filename(metric,varying_parameter,
-#                                fixed_parameters,keys,density)
-#        plt.savefig(filename,bbox_inches='tight')
+        filename = get_filename(metric,varying_parameter,
+                                fixed_parameters,keys,density)
+        plt.savefig(filename,bbox_inches='tight')
+        pdf.savefig(bbox_inches='tight')
+        plt.close()
+
+    pdf.close()
 
 ######################## PLOTTING SETTINGS ################################
 font_size=14
