@@ -251,19 +251,25 @@ BENCHMARK_OPTION(throughput_options)
     gauge::po::options_description options;
 
     std::vector<uint32_t> symbols;
+    symbols.push_back(8);
     symbols.push_back(16);
     symbols.push_back(32);
     symbols.push_back(64);
-//     symbols.push_back(128);
-//     symbols.push_back(256);
-//     symbols.push_back(512);
+    symbols.push_back(128);
+    symbols.push_back(256);
+    symbols.push_back(512);
 
     auto default_symbols =
         gauge::po::value<std::vector<uint32_t> >()->default_value(
             symbols, "")->multitoken();
 
     std::vector<double> loss_rate;
-    loss_rate.push_back(0.5);
+    loss_rate.push_back(0.05);
+    loss_rate.push_back(0.1);
+    loss_rate.push_back(0.15);
+    loss_rate.push_back(0.2);
+    loss_rate.push_back(0.25);
+    loss_rate.push_back(0.3);
 
     auto default_loss_rate =
         gauge::po::value<std::vector<double>>()->default_value(
@@ -271,7 +277,12 @@ BENCHMARK_OPTION(throughput_options)
 
     // Symbol size must be a multiple of 32
     std::vector<uint32_t> symbol_size;
-    symbol_size.push_back(1000000);
+    symbol_size.push_back(32000);
+    symbol_size.push_back(64000);
+    symbol_size.push_back(128000);
+    symbol_size.push_back(256000);
+    symbol_size.push_back(512000);
+    symbol_size.push_back(1024000);
 
     auto default_symbol_size =
         gauge::po::value<std::vector<uint32_t> >()->default_value(
@@ -307,7 +318,7 @@ BENCHMARK_OPTION(throughput_options)
 typedef throughput_benchmark<reed_sol_van_encoder, reed_sol_van_decoder>
     reed_sol_van_throughput;
 
-BENCHMARK_F(reed_sol_van_throughput, Jerasure, ReedSolVan, 10)
+BENCHMARK_F(reed_sol_van_throughput, Jerasure, ReedSolVan, 1)
 {
     run_benchmark();
 }

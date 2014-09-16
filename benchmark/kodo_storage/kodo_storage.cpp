@@ -537,23 +537,37 @@ BENCHMARK_OPTION(throughput_options)
     gauge::po::options_description options;
 
     std::vector<uint32_t> symbols;
+    symbols.push_back(8);
     symbols.push_back(16);
     symbols.push_back(32);
     symbols.push_back(64);
+    symbols.push_back(128);
+    symbols.push_back(256);
+    symbols.push_back(512);
 
     auto default_symbols =
         gauge::po::value<std::vector<uint32_t>>()->default_value(
             symbols, "")->multitoken();
 
     std::vector<double> loss_rate;
-    loss_rate.push_back(0.5);
+    loss_rate.push_back(0.05);
+    loss_rate.push_back(0.1);
+    loss_rate.push_back(0.15);
+    loss_rate.push_back(0.2);
+    loss_rate.push_back(0.25);
+    loss_rate.push_back(0.3);
 
     auto default_loss_rate =
         gauge::po::value<std::vector<double>>()->default_value(
             loss_rate, "")->multitoken();
 
     std::vector<uint32_t> symbol_size;
-    symbol_size.push_back(1000000);
+    symbol_size.push_back(32000);
+    symbol_size.push_back(64000);
+    symbol_size.push_back(128000);
+    symbol_size.push_back(256000);
+    symbol_size.push_back(512000);
+    symbol_size.push_back(1024000);
 
     auto default_symbol_size =
         gauge::po::value<std::vector<uint32_t>>()->default_value(
@@ -587,6 +601,8 @@ BENCHMARK_OPTION(sparse_density_options)
     gauge::po::options_description options;
 
     std::vector<double> density;
+    density.push_back(0.3);
+    density.push_back(0.4);
     density.push_back(0.5);
 
     auto default_density =
@@ -604,8 +620,9 @@ BENCHMARK_OPTION(perpetual_options)
     gauge::po::options_description options;
 
     std::vector<double> width_ratio;
-    width_ratio.push_back(0.05);
-    width_ratio.push_back(0.1);
+    width_ratio.push_back(0.2652);
+    width_ratio.push_back(0.375);
+    width_ratio.push_back(0.5303);
 
     auto default_width_ratio =
         gauge::po::value<std::vector<double> >()->default_value(
@@ -665,7 +682,7 @@ typedef storage_benchmark<
     kodo::shallow_backward_full_rlnc_decoder<fifi::binary8>>
     setup_backward_rlnc_throughput8;
 
-BENCHMARK_F(setup_backward_rlnc_throughput8, BackwardFullRLNC, Binary8, 5)
+BENCHMARK_F(setup_backward_rlnc_throughput8, BackwardFullRLNC, Binary8, 1)
 {
     run_benchmark();
 }
@@ -679,7 +696,7 @@ typedef storage_benchmark<
    kodo::shallow_delayed_full_rlnc_decoder<fifi::binary8>>
    setup_delayed_rlnc_throughput8;
 
-BENCHMARK_F(setup_delayed_rlnc_throughput8, FullDelayedRLNC, Binary8, 5)
+BENCHMARK_F(setup_delayed_rlnc_throughput8, FullDelayedRLNC, Binary8, 1)
 {
    run_benchmark();
 }
@@ -693,7 +710,7 @@ typedef sparse_storage_benchmark<
     kodo::shallow_full_rlnc_decoder<fifi::binary8>, true>
     setup_sparse_rlnc_throughput8;
 
-BENCHMARK_F(setup_sparse_rlnc_throughput8, SparseFullRLNC, Binary8, 5)
+BENCHMARK_F(setup_sparse_rlnc_throughput8, SparseFullRLNC, Binary8, 1)
 {
     run_benchmark();
 }
@@ -707,7 +724,7 @@ typedef perpetual_storage_benchmark<
     kodo::shallow_perpetual_decoder<fifi::binary>, true>
     setup_perpetual_throughput;
 
-BENCHMARK_F(setup_perpetual_throughput, Perpetual, Binary, 5)
+BENCHMARK_F(setup_perpetual_throughput, Perpetual, Binary, 1)
 {
     run_benchmark();
 }
@@ -717,7 +734,7 @@ typedef perpetual_storage_benchmark<
     kodo::shallow_perpetual_decoder<fifi::binary8>, true>
     setup_perpetual_throughput8;
 
-BENCHMARK_F(setup_perpetual_throughput8, Perpetual, Binary8, 5)
+BENCHMARK_F(setup_perpetual_throughput8, Perpetual, Binary8, 1)
 {
     run_benchmark();
 }
