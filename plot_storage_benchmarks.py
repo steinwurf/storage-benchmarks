@@ -13,9 +13,9 @@ import plot_storage_helper as ph
 df_openfec = pd.concat(
     [pd.read_csv(f) for f in glob.glob('openfec_debian6*.csv')])
 df_jerasure = pd.concat(
-    [pd.read_csv(f) for f in glob.glob('jerasure_test_debian6*.csv')])
+    [pd.read_csv(f) for f in glob.glob('jerasure_debian6*.csv')])
 df_isa = pd.concat(
-    [pd.read_csv(f) for f in glob.glob('isa_test_debian6*.csv')])
+    [pd.read_csv(f) for f in glob.glob('isa_debian6*.csv')])
 df_fullrlnc = pd.concat(
     [pd.read_csv(f) for f in glob.glob('fullrlnc_debian6*.csv')])
 df_sparse = pd.concat(
@@ -23,10 +23,9 @@ df_sparse = pd.concat(
 df_perpetual = pd.concat(
     [pd.read_csv(f) for f in glob.glob('perpetual_debian6*.csv')])
 df_thread = pd.concat(
-    [pd.read_csv(f) for f in glob.glob('threading_debin8*.csv')])
-
-# Note: Currently the threading dataframe contains both sparse and
-# dense threading data
+    [pd.read_csv(f) for f in glob.glob('thread_rlnc_debian6*.csv')])
+df_sparse_thread = pd.concat(
+    [pd.read_csv(f) for f in glob.glob('sparse_thread_debian6*.csv')])
 
 #Patch dataframes
 
