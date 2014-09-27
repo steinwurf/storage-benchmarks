@@ -85,7 +85,7 @@ struct isa_encoder
 
 protected:
 
-    friend class isa_decoder;
+    friend struct isa_decoder;
 
     uint8_t* m_buffs[TEST_SOURCES];
     uint8_t a[MMAX*KMAX];

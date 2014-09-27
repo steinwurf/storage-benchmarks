@@ -175,8 +175,13 @@ def build(bld):
     if '-O2' in bld.env['CFLAGS']:
         bld.env['CFLAGS'].remove('-O2')
 
-    # Jerasure is not compatible with the VS compiler
-    if not bld.is_mkspec_platform('windows'):
+    jerasure_enabled = True
+    # Jerasure is not compatible with the VS compiler and it does not compile
+    # for 32-bit CPUs
+    if bld.is_mkspec_platform('windows') or bld.env['DEST_CPU'] == 'x86':
+        jerasure_enabled = False
+
+    if jerasure_enabled:
         bld.stlib(
             features='c',
             source=bld.path.ant_glob('gf-complete/src/**/*.c'),
@@ -194,8 +199,12 @@ def build(bld):
             export_includes=['jerasure/include'],
             use=['SIMD_SHARED', 'gf_complete'])
 
+    isa_enabled = True
     # ISA is not compatible with the VS compiler
-    if not bld.is_mkspec_platform('windows'):
+    if bld.is_mkspec_platform('windows'):
+        isa_enabled = False
+
+    if isa_enabled:
         bld.stlib(
             features='c asm',
             source=bld.path.ant_glob('isa-l_open_src_2.8/isa/*.c') +
@@ -205,8 +214,12 @@ def build(bld):
             includes=['isa-l_open_src_2.8/isa'],
             export_includes=['isa-l_open_src_2.8/isa'])
 
-    # OpenFEC is not compatible with the VS compiler
-    if not bld.is_mkspec_platform('windows'):
+    openfec_enabled = True
+    # OpenFEC is not compatible with clang and the VS compiler
+    if 'clang' in bld.env.get_flat("CC") or bld.is_mkspec_platform('windows'):
+        openfec_enabled = False
+
+    if openfec_enabled:
         openfec_flags = ['-O4']
         bld.env['CFLAGS_OPENFEC_SHARED'] = openfec_flags
         bld.env['CXXFLAGS_OPENFEC_SHARED'] = openfec_flags
@@ -237,7 +250,10 @@ def build(bld):
         # in a recurse call
 
         bld.recurse('benchmark/kodo_storage')
-        if not bld.is_mkspec_platform('windows'):
+
+        if openfec_enabled:
             bld.recurse('benchmark/openfec_throughput')
+        if isa_enabled:
             bld.recurse('benchmark/isa_throughput')
+        if jerasure_enabled:
             bld.recurse('benchmark/jerasure_throughput')

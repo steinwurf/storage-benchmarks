@@ -114,7 +114,7 @@ struct openfec_rs_encoder
 
 protected:
 
-    friend class openfec_rs_decoder;
+    friend struct openfec_rs_decoder;
 
     // Code parameters
     int k, m;

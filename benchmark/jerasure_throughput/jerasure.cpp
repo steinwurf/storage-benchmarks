@@ -94,7 +94,7 @@ struct reed_sol_van_encoder
 
 protected:
 
-    friend class reed_sol_van_decoder;
+    friend struct reed_sol_van_decoder;
 
     /// The input data
     std::vector<uint8_t> m_data_in;
