@@ -200,8 +200,10 @@ def build(bld):
             use=['SIMD_SHARED', 'gf_complete'])
 
     isa_enabled = True
-    # ISA is not compatible with the VS compiler
-    if bld.is_mkspec_platform('windows'):
+    # ISA is not compatible with clang and the VS compiler and it does not
+    # compile for 32-bit CPUs
+    if bld.is_mkspec_platform('windows') or bld.env['DEST_CPU'] == 'x86' \
+       'clang' in bld.env.get_flat("CC"):
         isa_enabled = False
 
     if isa_enabled:
