@@ -633,7 +633,7 @@ typedef storage_benchmark<
     kodo::shallow_full_rlnc_decoder<fifi::binary8>>
     setup_rlnc_throughput8;
 
-BENCHMARK_F(setup_rlnc_throughput8, FullRLNC, Binary8, 5)
+BENCHMARK_F(setup_rlnc_throughput8, FullRLNC, Binary8, 1)
 {
     run_benchmark();
 }
