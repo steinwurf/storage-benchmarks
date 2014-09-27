@@ -20,7 +20,7 @@ def options(opt):
 
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='boost',
-        git_repository='github.com/steinwurf/external-boost-light.git',
+        git_repository='github.com/steinwurf/boost.git',
         major_version=1))
 
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
@@ -30,7 +30,7 @@ def options(opt):
 
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='gauge',
-        git_repository='github.com/steinwurf/cxx-gauge.git',
+        git_repository='github.com/steinwurf/gauge.git',
         major_version=7))
 
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
@@ -60,7 +60,7 @@ def options(opt):
 
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='waf-tools',
-        git_repository='github.com/steinwurf/external-waf-tools.git',
+        git_repository='github.com/steinwurf/waf-tools.git',
         major_version=2))
 
     opt.load('wurf_configure_output')
@@ -95,10 +95,12 @@ def configure(conf):
             conf.check_cc(lib='m')
 
     set_simd_flags(conf)
+
     conf.load('asm')
-    conf.find_program(['yasm'], var='AS')
-    conf.env.AS_TGT_F = ['-o']
-    conf.env.ASLNK_TGT_F = ['-o']
+    if not conf.is_mkspec_platform('windows'):
+        conf.find_program(['yasm'], var='AS')
+        conf.env.AS_TGT_F = ['-o']
+        conf.env.ASLNK_TGT_F = ['-o']
 
 
 def set_simd_flags(conf):
@@ -173,43 +175,64 @@ def build(bld):
     if '-O2' in bld.env['CFLAGS']:
         bld.env['CFLAGS'].remove('-O2')
 
-    bld.stlib(
-        features='c',
-        source=bld.path.ant_glob('gf-complete/src/**/*.c'),
-        target='gf_complete',
-        includes=['gf-complete/include'],
-        export_includes=['gf-complete/include'],
-        use=['SIMD_SHARED'])
+    jerasure_enabled = True
+    # Jerasure is not compatible with the VS compiler and it does not compile
+    # for 32-bit CPUs
+    if bld.is_mkspec_platform('windows') or bld.env['DEST_CPU'] == 'x86':
+        jerasure_enabled = False
 
-    bld.stlib(
-        features='c',
-        source=bld.path.ant_glob('jerasure/src/**/*.c',
-                                 excl='jerasure/src/cauchy_best_r6.c'),
-        target='jerasure',
-        includes=['jerasure/include'],
-        export_includes=['jerasure/include'],
-        use=['SIMD_SHARED', 'gf_complete'])
+    if jerasure_enabled:
+        bld.stlib(
+            features='c',
+            source=bld.path.ant_glob('gf-complete/src/**/*.c'),
+            target='gf_complete',
+            includes=['gf-complete/include'],
+            export_includes=['gf-complete/include'],
+            use=['SIMD_SHARED'])
 
-    bld.stlib(
-        features='c asm',
-        source=bld.path.ant_glob('isa-l_open_src_2.8/isa/*.c') +
-        bld.path.ant_glob('isa-l_open_src_2.8/isa/*.asm'),
-        target='isa',
-        asflags=get_asmformat(bld),
-        includes=['isa-l_open_src_2.8/isa'],
-        export_includes=['isa-l_open_src_2.8/isa'])
+        bld.stlib(
+            features='c',
+            source=bld.path.ant_glob('jerasure/src/**/*.c',
+                                     excl='jerasure/src/cauchy_best_r6.c'),
+            target='jerasure',
+            includes=['jerasure/include'],
+            export_includes=['jerasure/include'],
+            use=['SIMD_SHARED', 'gf_complete'])
 
-    openfec_flags = ['-O4']
-    bld.env['CFLAGS_OPENFEC_SHARED'] = openfec_flags
-    bld.env['CXXFLAGS_OPENFEC_SHARED'] = openfec_flags
+    isa_enabled = True
+    # ISA is not compatible with clang and the VS compiler and it does not
+    # compile for 32-bit CPUs
+    if bld.is_mkspec_platform('windows') or bld.env['DEST_CPU'] == 'x86' or \
+       'clang' in bld.env.get_flat("CC"):
+        isa_enabled = False
 
-    bld.stlib(
-        features='c',
-        source=bld.path.ant_glob('openfec-1.3/src/**/*.c'),
-        target='openfec',
-        includes=['openfec-1.3/src'],
-        export_includes=['openfec-1.3/src'],
-        use=['OPENFEC_SHARED', 'PTHREAD'])
+    if isa_enabled:
+        bld.stlib(
+            features='c asm',
+            source=bld.path.ant_glob('isa-l_open_src_2.8/isa/*.c') +
+            bld.path.ant_glob('isa-l_open_src_2.8/isa/*.asm'),
+            target='isa',
+            asflags=get_asmformat(bld),
+            includes=['isa-l_open_src_2.8/isa'],
+            export_includes=['isa-l_open_src_2.8/isa'])
+
+    openfec_enabled = True
+    # OpenFEC is not compatible with clang and the VS compiler
+    if 'clang' in bld.env.get_flat("CC") or bld.is_mkspec_platform('windows'):
+        openfec_enabled = False
+
+    if openfec_enabled:
+        openfec_flags = ['-O4']
+        bld.env['CFLAGS_OPENFEC_SHARED'] = openfec_flags
+        bld.env['CXXFLAGS_OPENFEC_SHARED'] = openfec_flags
+
+        bld.stlib(
+            features='c',
+            source=bld.path.ant_glob('openfec-1.3/src/**/*.c'),
+            target='openfec',
+            includes=['openfec-1.3/src'],
+            export_includes=['openfec-1.3/src'],
+            use=['OPENFEC_SHARED', 'PTHREAD'])
 
     if bld.is_toplevel():
 
@@ -228,7 +251,11 @@ def build(bld):
         # top-level wscript i.e. not when included as a dependency
         # in a recurse call
 
-        bld.recurse('benchmark/isa_throughput')
-        bld.recurse('benchmark/jerasure_throughput')
         bld.recurse('benchmark/kodo_storage')
-        bld.recurse('benchmark/openfec_throughput')
+
+        if openfec_enabled:
+            bld.recurse('benchmark/openfec_throughput')
+        if isa_enabled:
+            bld.recurse('benchmark/isa_throughput')
+        if jerasure_enabled:
+            bld.recurse('benchmark/jerasure_throughput')

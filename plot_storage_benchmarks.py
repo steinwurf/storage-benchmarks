@@ -13,9 +13,9 @@ import plot_storage_helper as ph
 df_openfec = pd.concat(
     [pd.read_csv(f) for f in glob.glob('openfec_debian6*.csv')])
 df_jerasure = pd.concat(
-    [pd.read_csv(f) for f in glob.glob('jerasure_test_debian6*.csv')])
+    [pd.read_csv(f) for f in glob.glob('jerasure_debian6*.csv')])
 df_isa = pd.concat(
-    [pd.read_csv(f) for f in glob.glob('isa_test_debian6*.csv')])
+    [pd.read_csv(f) for f in glob.glob('isa_debian6*.csv')])
 df_fullrlnc = pd.concat(
     [pd.read_csv(f) for f in glob.glob('fullrlnc_debian6*.csv')])
 df_sparse = pd.concat(
@@ -23,10 +23,9 @@ df_sparse = pd.concat(
 df_perpetual = pd.concat(
     [pd.read_csv(f) for f in glob.glob('perpetual_debian6*.csv')])
 df_thread = pd.concat(
-    [pd.read_csv(f) for f in glob.glob('threading_debin8*.csv')])
-
-# Note: Currently the threading dataframe contains both sparse and
-# dense threading data
+    [pd.read_csv(f) for f in glob.glob('thread_rlnc_debian6*.csv')])
+df_sparse_thread = pd.concat(
+    [pd.read_csv(f) for f in glob.glob('sparse_thread_debian6*.csv')])
 
 #Patch dataframes
 
@@ -35,28 +34,23 @@ df_openfec['density'] = 1
 df_isa['density'] = 1
 df_jerasure['density'] = 1
 df_fullrlnc['density'] = 1
-df_thread['density'] = df_thread['density'].fillna(1) #Fill NaN values with "1"
-df_perpetual['density'] = df_perpetual['width_ratio']
+df_thread['density'] = 1
 
-#Width-ratio for non-perpetual
-df_openfec['width_ratio'] = df_openfec['density']
-df_isa['width_ratio'] = df_isa['density']
-df_jerasure['width_ratio'] = df_jerasure['density']
-df_fullrlnc['width_ratio'] = df_fullrlnc['density']
-df_sparse['width_ratio'] = df_sparse['density']
-df_thread['width_ratio'] = df_thread['density']
+#Rename perpetual dataframe 'width_ratio' column as 'density' because the
+#width ratio can be seen as a density
+df_perpetual = df_perpetual.rename(columns = {'width_ratio':'density'})
 
 #Concatenate all dataframes into a single one
 df_all_sparse = pd.concat([df_openfec, df_perpetual,
-                           df_thread[(df_thread['density'] != 1) & \
-                                     (df_thread['density'] != 0.5 )],
+                           df_sparse_thread[(
+                           df_sparse_thread['density'] != 0.5)],
                            df_sparse[df_sparse['density'] != 0.5 ]])
 
-df_all_dense = pd.concat([df_isa, df_jerasure, df_fullrlnc,
-                          df_thread[(df_thread['density'] == 1) | \
-                                    (df_thread['density'] == 0.5)],
-                          df_sparse[df_sparse['density'] == 0.5 ]])
-#Note: Sparse RLNC with 50% density can be regarded as dense
+df_all_dense = pd.concat([df_isa, df_jerasure, df_fullrlnc,df_thread,
+                          df_sparse[df_sparse['density'] == 0.5 ],
+                          df_sparse_thread[df_sparse_thread['density'] == 0.5 ]
+                          ])
+#Note: Sparse RLNC (threaded or not) with 50% density can be regarded as dense
 
 #Goodput dataframe vs. symbols (Fixed: symbol size, loss rate, type)
 ph.plot_metric(df_all_sparse,'goodput','symbols',

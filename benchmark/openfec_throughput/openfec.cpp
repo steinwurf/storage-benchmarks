@@ -29,9 +29,9 @@ struct openfec_rs_encoder
         m_symbols(symbols), m_symbol_size(symbol_size)
     {
         k = m_symbols;
-        m = encoded_symbols * 3;
+        m = encoded_symbols;
         m_block_size = m_symbols * m_symbol_size;
-        m_payload_count = encoded_symbols * 3;
+        m_payload_count = encoded_symbols;
 
         int i;
         int vector_count = k + m;
@@ -71,8 +71,7 @@ struct openfec_rs_encoder
         assert(m_payload_count == (uint32_t)m);
 
         of_session_t* ses;
-        //of_codec_id_t codec_id = OF_CODEC_REED_SOLOMON_GF_2_8_STABLE;
-        of_codec_id_t codec_id = OF_CODEC_LDPC_STAIRCASE_STABLE;
+        of_codec_id_t codec_id = OF_CODEC_REED_SOLOMON_GF_2_8_STABLE;
         of_codec_type_t codec_type = OF_ENCODER;
 
         // Create the codec instance and initialize it accordingly
@@ -82,15 +81,11 @@ struct openfec_rs_encoder
             printf("of_create_codec_instance() failed\n");
         }
 
-        m_seed = rand();
-
-        //of_rs_parameters_t params;
-        of_ldpc_parameters params;
+        of_rs_parameters_t params;
         params.nb_source_symbols = k;
         params.nb_repair_symbols = m;
         params.encoding_symbol_length = m_symbol_size;
-        params.N1 = 7;
-        params.prng_seed = m_seed;
+
         if (of_set_fec_parameters(ses, (of_parameters_t*)&params))
         {
             printf("of_set_fec_parameters() failed\n");
@@ -119,12 +114,10 @@ struct openfec_rs_encoder
 
 protected:
 
-    friend class openfec_rs_decoder;
+    friend struct openfec_rs_decoder;
 
     // Code parameters
     int k, m;
-    // Random seed
-    int32_t m_seed;
 
     // Number of symbols
     uint32_t m_symbols;
@@ -150,7 +143,7 @@ struct openfec_rs_decoder
         m_symbols(symbols), m_symbol_size(symbol_size)
     {
         k = m_symbols;
-        m = encoded_symbols * 3;
+        m = encoded_symbols;
         m_block_size = m_symbols * m_symbol_size;
         m_decoding_result = -1;
         uint32_t payload_count = encoded_symbols;
@@ -192,8 +185,7 @@ struct openfec_rs_decoder
         assert(payload_count == m);
 
         of_session_t* ses;
-        //of_codec_id_t codec_id = OF_CODEC_REED_SOLOMON_GF_2_8_STABLE;
-        of_codec_id_t codec_id = OF_CODEC_LDPC_STAIRCASE_STABLE;
+        of_codec_id_t codec_id = OF_CODEC_REED_SOLOMON_GF_2_8_STABLE;
         of_codec_type_t codec_type = OF_DECODER;
 
         // Create the codec instance and initialize it accordingly
@@ -204,13 +196,11 @@ struct openfec_rs_decoder
             return 0;
         }
 
-        //of_rs_parameters_t params;
-        of_ldpc_parameters params;
+        of_rs_parameters_t params;
         params.nb_source_symbols = k;
         params.nb_repair_symbols = m;
         params.encoding_symbol_length = m_symbol_size;
-        params.N1 = 7;
-        params.prng_seed = encoder->m_seed;
+
         if (of_set_fec_parameters(ses, (of_parameters_t*)&params))
         {
             printf("of_set_fec_parameters() failed\n");
@@ -299,19 +289,18 @@ BENCHMARK_OPTION(throughput_options)
     gauge::po::options_description options;
 
     std::vector<uint32_t> symbols;
+    symbols.push_back(8);
     symbols.push_back(16);
-    //     symbols.push_back(32);
-    //     symbols.push_back(64);
-    //     symbols.push_back(128);
-    //     symbols.push_back(256);
-    //     symbols.push_back(512);
+    symbols.push_back(32);
+    symbols.push_back(64);
 
     auto default_symbols =
         gauge::po::value<std::vector<uint32_t> >()->default_value(
             symbols, "")->multitoken();
 
     std::vector<double> loss_rate;
-    loss_rate.push_back(0.5);
+    loss_rate.push_back(0.1);
+    loss_rate.push_back(0.3);
 
     auto default_loss_rate =
         gauge::po::value<std::vector<double>>()->default_value(
@@ -319,6 +308,7 @@ BENCHMARK_OPTION(throughput_options)
 
     // Symbol size must be a multiple of 32
     std::vector<uint32_t> symbol_size;
+    symbol_size.push_back(200000);
     symbol_size.push_back(1000000);
 
     auto default_symbol_size =
@@ -355,7 +345,7 @@ BENCHMARK_OPTION(throughput_options)
 typedef throughput_benchmark<openfec_rs_encoder, openfec_rs_decoder>
     openfec_rs_throughput;
 
-BENCHMARK_F(openfec_rs_throughput, OpenFEC, LDPC, 10)
+BENCHMARK_F(openfec_rs_throughput, OpenFEC, ReedSolomon, 1)
 {
     run_benchmark();
 }

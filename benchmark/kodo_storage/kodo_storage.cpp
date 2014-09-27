@@ -4,7 +4,9 @@
 // http://www.steinwurf.com/licensing
 
 #include <ctime>
+#include <cstdint>
 #include <set>
+#include <string>
 #include <algorithm>
 
 #include <boost/make_shared.hpp>
@@ -18,9 +20,9 @@
 #include <kodo/has_systematic_encoder.hpp>
 #include <kodo/set_systematic_off.hpp>
 #include <kodo/rlnc/full_rlnc_codes.hpp>
-#include <kodo/rlnc/perpetual_codes.hpp>
-// #include <kodo/thread_encoder.hpp>
-// #include <kodo/thread_decoder.hpp>
+//#include <kodo/rlnc/perpetual_codes.hpp>
+//#include <kodo/thread_encoder.hpp>
+//#include <kodo/thread_decoder.hpp>
 
 #include <tables/table.hpp>
 
@@ -537,6 +539,7 @@ BENCHMARK_OPTION(throughput_options)
     gauge::po::options_description options;
 
     std::vector<uint32_t> symbols;
+    symbols.push_back(8);
     symbols.push_back(16);
     symbols.push_back(32);
     symbols.push_back(64);
@@ -546,13 +549,15 @@ BENCHMARK_OPTION(throughput_options)
             symbols, "")->multitoken();
 
     std::vector<double> loss_rate;
-    loss_rate.push_back(0.5);
+    loss_rate.push_back(0.1);
+    loss_rate.push_back(0.3);
 
     auto default_loss_rate =
         gauge::po::value<std::vector<double>>()->default_value(
             loss_rate, "")->multitoken();
 
     std::vector<uint32_t> symbol_size;
+    symbol_size.push_back(200000);
     symbol_size.push_back(1000000);
 
     auto default_symbol_size =
@@ -599,24 +604,25 @@ BENCHMARK_OPTION(sparse_density_options)
     gauge::runner::instance().register_options(options);
 }
 
-BENCHMARK_OPTION(perpetual_options)
-{
-    gauge::po::options_description options;
-
-    std::vector<double> width_ratio;
-    width_ratio.push_back(0.05);
-    width_ratio.push_back(0.1);
-
-    auto default_width_ratio =
-        gauge::po::value<std::vector<double> >()->default_value(
-            width_ratio, "")->multitoken();
-
-    options.add_options()
-        ("width_ratio", default_width_ratio,
-        "Set the width for perpetual codes (in percentage)");
-
-    gauge::runner::instance().register_options(options);
-}
+// BENCHMARK_OPTION(perpetual_options)
+// {
+//     gauge::po::options_description options;
+//
+//     std::vector<double> width_ratio;
+//     width_ratio.push_back(0.2652);
+//     width_ratio.push_back(0.375);
+//     width_ratio.push_back(0.5303);
+//
+//     auto default_width_ratio =
+//         gauge::po::value<std::vector<double> >()->default_value(
+//             width_ratio, "")->multitoken();
+//
+//     options.add_options()
+//         ("width_ratio", default_width_ratio,
+//         "Set the width for perpetual codes (in percentage)");
+//
+//     gauge::runner::instance().register_options(options);
+// }
 
 //------------------------------------------------------------------
 // FullRLNC
@@ -641,17 +647,17 @@ BENCHMARK_F(setup_rlnc_throughput8, FullRLNC, Binary8, 5)
 //     kodo::thread_decoder<fifi::binary8>>
 //     setup_thread_throughput8;
 //
-// BENCHMARK_F(setup_thread_throughput8, Thread, Binary8, 5)
+// BENCHMARK_F(setup_thread_throughput8, Thread, Binary8, 1)
 // {
 //     run_benchmark();
 // }
 //
 // typedef sparse_storage_benchmark<
 //     kodo::sparse_thread_encoder<fifi::binary8>,
-//     kodo::thread_decoder<fifi::binary8>>
+//     kodo::thread_decoder<fifi::binary8>, true>
 //     setup_sparse_thread_throughput8;
 //
-// BENCHMARK_F(setup_sparse_thread_throughput8, SparseThread, Binary8, 5)
+// BENCHMARK_F(setup_sparse_thread_throughput8, SparseThread, Binary8, 1)
 // {
 //     run_benchmark();
 // }
@@ -660,29 +666,29 @@ BENCHMARK_F(setup_rlnc_throughput8, FullRLNC, Binary8, 5)
 // BackwardFullRLNC
 //------------------------------------------------------------------
 
-typedef storage_benchmark<
-    kodo::shallow_full_rlnc_encoder<fifi::binary8>,
-    kodo::shallow_backward_full_rlnc_decoder<fifi::binary8>>
-    setup_backward_rlnc_throughput8;
-
-BENCHMARK_F(setup_backward_rlnc_throughput8, BackwardFullRLNC, Binary8, 5)
-{
-    run_benchmark();
-}
+// typedef storage_benchmark<
+//     kodo::shallow_full_rlnc_encoder<fifi::binary8>,
+//     kodo::shallow_backward_full_rlnc_decoder<fifi::binary8>>
+//     setup_backward_rlnc_throughput8;
+//
+// BENCHMARK_F(setup_backward_rlnc_throughput8, BackwardFullRLNC, Binary8, 1)
+// {
+//     run_benchmark();
+// }
 
 //------------------------------------------------------------------
 // FullDelayedRLNC
 //------------------------------------------------------------------
 
-typedef storage_benchmark<
-   kodo::shallow_full_rlnc_encoder<fifi::binary8>,
-   kodo::shallow_delayed_full_rlnc_decoder<fifi::binary8>>
-   setup_delayed_rlnc_throughput8;
-
-BENCHMARK_F(setup_delayed_rlnc_throughput8, FullDelayedRLNC, Binary8, 5)
-{
-   run_benchmark();
-}
+// typedef storage_benchmark<
+//    kodo::shallow_full_rlnc_encoder<fifi::binary8>,
+//    kodo::shallow_delayed_full_rlnc_decoder<fifi::binary8>>
+//    setup_delayed_rlnc_throughput8;
+//
+// BENCHMARK_F(setup_delayed_rlnc_throughput8, FullDelayedRLNC, Binary8, 1)
+// {
+//    run_benchmark();
+// }
 
 //------------------------------------------------------------------
 // SparseFullRLNC
@@ -693,7 +699,7 @@ typedef sparse_storage_benchmark<
     kodo::shallow_full_rlnc_decoder<fifi::binary8>, true>
     setup_sparse_rlnc_throughput8;
 
-BENCHMARK_F(setup_sparse_rlnc_throughput8, SparseFullRLNC, Binary8, 5)
+BENCHMARK_F(setup_sparse_rlnc_throughput8, SparseFullRLNC, Binary8, 1)
 {
     run_benchmark();
 }
@@ -702,25 +708,25 @@ BENCHMARK_F(setup_sparse_rlnc_throughput8, SparseFullRLNC, Binary8, 5)
 // Shallow Perpetual RLNC
 //------------------------------------------------------------------
 
-typedef perpetual_storage_benchmark<
-    kodo::shallow_perpetual_encoder<fifi::binary>,
-    kodo::shallow_perpetual_decoder<fifi::binary>, true>
-    setup_perpetual_throughput;
-
-BENCHMARK_F(setup_perpetual_throughput, Perpetual, Binary, 5)
-{
-    run_benchmark();
-}
-
-typedef perpetual_storage_benchmark<
-    kodo::shallow_perpetual_encoder<fifi::binary8>,
-    kodo::shallow_perpetual_decoder<fifi::binary8>, true>
-    setup_perpetual_throughput8;
-
-BENCHMARK_F(setup_perpetual_throughput8, Perpetual, Binary8, 5)
-{
-    run_benchmark();
-}
+// typedef perpetual_storage_benchmark<
+//     kodo::shallow_perpetual_encoder<fifi::binary>,
+//     kodo::shallow_perpetual_decoder<fifi::binary>, true>
+//     setup_perpetual_throughput;
+//
+// BENCHMARK_F(setup_perpetual_throughput, Perpetual, Binary, 1)
+// {
+//     run_benchmark();
+// }
+//
+// typedef perpetual_storage_benchmark<
+//     kodo::shallow_perpetual_encoder<fifi::binary8>,
+//     kodo::shallow_perpetual_decoder<fifi::binary8>, true>
+//     setup_perpetual_throughput8;
+//
+// BENCHMARK_F(setup_perpetual_throughput8, Perpetual, Binary8, 1)
+// {
+//     run_benchmark();
+// }
 
 int main(int argc, const char* argv[])
 {

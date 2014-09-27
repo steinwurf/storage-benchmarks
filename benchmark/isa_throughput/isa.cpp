@@ -85,7 +85,7 @@ struct isa_encoder
 
 protected:
 
-    friend class isa_decoder;
+    friend struct isa_decoder;
 
     uint8_t* m_buffs[TEST_SOURCES];
     uint8_t a[MMAX*KMAX];
@@ -263,19 +263,18 @@ BENCHMARK_OPTION(throughput_options)
     gauge::po::options_description options;
 
     std::vector<uint32_t> symbols;
+    symbols.push_back(8);
     symbols.push_back(16);
     symbols.push_back(32);
     symbols.push_back(64);
-    //     symbols.push_back(128);
-    //     symbols.push_back(256);
-    //     symbols.push_back(512);
 
     auto default_symbols =
         gauge::po::value<std::vector<uint32_t> >()->default_value(
             symbols, "")->multitoken();
 
     std::vector<double> loss_rate;
-    loss_rate.push_back(0.5);
+    loss_rate.push_back(0.1);
+    loss_rate.push_back(0.3);
 
     auto default_loss_rate =
         gauge::po::value<std::vector<double>>()->default_value(
@@ -283,6 +282,7 @@ BENCHMARK_OPTION(throughput_options)
 
     // Symbol size must be a multiple of 64
     std::vector<uint32_t> symbol_size;
+    symbol_size.push_back(200000);
     symbol_size.push_back(1000000);
 
     auto default_symbol_size =
@@ -319,7 +319,7 @@ BENCHMARK_OPTION(throughput_options)
 typedef throughput_benchmark<isa_encoder, isa_decoder>
     isa_throughput;
 
-BENCHMARK_F(isa_throughput, ISA, ErasureCode, 10)
+BENCHMARK_F(isa_throughput, ISA, ErasureCode, 1)
 {
     run_benchmark();
 }
