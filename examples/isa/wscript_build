@@ -1,0 +1,9 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+
+bld.program(
+    features = 'c',
+    source   = ['erasure_code_sse_perf.c'],
+    target   = 'sse_perf',
+    use      = ['isa'])

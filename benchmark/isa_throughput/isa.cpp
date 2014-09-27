@@ -267,18 +267,13 @@ BENCHMARK_OPTION(throughput_options)
     symbols.push_back(16);
     symbols.push_back(32);
     symbols.push_back(64);
-    symbols.push_back(128);
 
     auto default_symbols =
         gauge::po::value<std::vector<uint32_t> >()->default_value(
             symbols, "")->multitoken();
 
     std::vector<double> loss_rate;
-    loss_rate.push_back(0.05);
     loss_rate.push_back(0.1);
-    loss_rate.push_back(0.15);
-    loss_rate.push_back(0.2);
-    loss_rate.push_back(0.25);
     loss_rate.push_back(0.3);
 
     auto default_loss_rate =
@@ -287,12 +282,8 @@ BENCHMARK_OPTION(throughput_options)
 
     // Symbol size must be a multiple of 64
     std::vector<uint32_t> symbol_size;
-    symbol_size.push_back(32000);
-    symbol_size.push_back(64000);
-    symbol_size.push_back(128000);
-    symbol_size.push_back(256000);
-    symbol_size.push_back(512000);
-    symbol_size.push_back(1024000);
+    symbol_size.push_back(200000);
+    symbol_size.push_back(1000000);
 
     auto default_symbol_size =
         gauge::po::value<std::vector<uint32_t> >()->default_value(

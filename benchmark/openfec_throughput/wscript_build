@@ -2,18 +2,9 @@
 # encoding: utf-8
 
 bld.program(
-    features = 'cxx test benchmark',
+    features = 'cxx benchmark',
     source   = ['openfec.cpp'],
     target   = 'openfec_throughput',
     use      = ['openfec',
-                'boost_includes', 'boost_system', 'boost_timer',
-                'boost_chrono', 'gauge'])
-
-
-bld.program(
-    features = 'c',
-    source   = bld.path.ant_glob('*.c'),
-    target   = 'openfec_original_throughput',
-    use      = ['openfec', 'M', 'OPENFEC_SHARED',
                 'boost_includes', 'boost_system', 'boost_timer',
                 'boost_chrono', 'gauge'])

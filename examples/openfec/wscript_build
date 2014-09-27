@@ -1,0 +1,8 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+bld.program(
+    features = 'c',
+    source   = bld.path.ant_glob('*.c'),
+    target   = 'eperftool',
+    use      = ['openfec', 'M', 'OPENFEC_SHARED'])

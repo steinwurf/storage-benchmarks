@@ -2,18 +2,9 @@
 # encoding: utf-8
 
 bld.program(
-    features = 'cxx test benchmark',
+    features = 'cxx benchmark',
     source   = ['isa.cpp'],
     target   = 'isa_throughput',
-    use      = ['isa',
-                'boost_includes', 'boost_system', 'boost_timer',
-                'boost_chrono', 'gauge'])
-
-
-bld.program(
-    features = 'c',
-    source   = ['erasure_code_sse_perf.c'],
-    target   = 'isa_original_throughput',
     use      = ['isa',
                 'boost_includes', 'boost_system', 'boost_timer',
                 'boost_chrono', 'gauge'])
