@@ -29,10 +29,10 @@ template<class Encoder, class Decoder, bool Relaxed = false>
 struct storage_benchmark : public gauge::time_benchmark
 {
     typedef typename Encoder::factory encoder_factory;
-    typedef typename Encoder::pointer encoder_ptr;
+    typedef typename Encoder::factory::pointer encoder_ptr;
 
     typedef typename Decoder::factory decoder_factory;
-    typedef typename Decoder::pointer decoder_ptr;
+    typedef typename Decoder::factory::pointer decoder_ptr;
 
     void init()
     {
@@ -481,13 +481,13 @@ public:
         auto loss_rate = options["loss_rate"].as<std::vector<double> >();
         auto symbol_size = options["symbol_size"].as<std::vector<uint32_t> >();
         auto types = options["type"].as<std::vector<std::string> >();
-        auto width_ratio = options["width_ratio"].as<std::vector<double> >();
+        auto width = options["width"].as<std::vector<uint32_t> >();
 
         assert(symbols.size() > 0);
         assert(loss_rate.size() > 0);
         assert(symbol_size.size() > 0);
         assert(types.size() > 0);
-        assert(width_ratio.size() > 0);
+        assert(width.size() > 0);
 
         for (const auto& s : symbols)
         {
@@ -497,7 +497,7 @@ public:
                 {
                     for (const auto& t : types)
                     {
-                        for (const auto& w: width_ratio)
+                        for (const auto& w: width)
                         {
                             gauge::config_set cs;
                             cs.set_value<uint32_t>("symbols", s);
@@ -508,7 +508,7 @@ public:
                             uint32_t erased = (uint32_t)std::ceil(s * r);
                             cs.set_value<uint32_t>("erased_symbols", erased);
 
-                            cs.set_value<double>("width_ratio", w);
+                            cs.set_value<double>("width", w);
 
                             Super::add_configuration(cs);
                         }
@@ -523,8 +523,8 @@ public:
         Super::setup();
 
         gauge::config_set cs = Super::get_current_configuration();
-        double width_ratio = cs.get_value<double>("width_ratio");
-        m_encoder->set_width_ratio(width_ratio);
+        double width = cs.get_value<double>("width");
+        m_encoder->set_width(width);
     }
 };
 
@@ -537,9 +537,6 @@ BENCHMARK_OPTION(throughput_options)
     gauge::po::options_description options;
 
     std::vector<uint32_t> symbols;
-    symbols.push_back(8);
-    symbols.push_back(16);
-    symbols.push_back(32);
     symbols.push_back(64);
     symbols.push_back(128);
     symbols.push_back(256);
@@ -619,18 +616,18 @@ BENCHMARK_OPTION(perpetual_options)
 {
     gauge::po::options_description options;
 
-    std::vector<double> width_ratio;
-    width_ratio.push_back(0.2652);
-    width_ratio.push_back(0.375);
-    width_ratio.push_back(0.5303);
+    std::vector<uint32_t> width;
+    width.push_back(20);
+    width.push_back(40);
+    width.push_back(60);
 
-    auto default_width_ratio =
-        gauge::po::value<std::vector<double> >()->default_value(
-            width_ratio, "")->multitoken();
+    auto default_width =
+        gauge::po::value<std::vector<uint32_t> >()->default_value(
+            width, "")->multitoken();
 
     options.add_options()
-        ("width_ratio", default_width_ratio,
-        "Set the width for perpetual codes (in percentage)");
+        ("width", default_width,
+        "Set the width for perpetual codes (absolute)");
 
     gauge::runner::instance().register_options(options);
 }
