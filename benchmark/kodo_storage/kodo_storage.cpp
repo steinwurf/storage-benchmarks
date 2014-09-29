@@ -617,9 +617,10 @@ BENCHMARK_OPTION(perpetual_options)
     gauge::po::options_description options;
 
     std::vector<uint32_t> width;
-    width.push_back(20);
-    width.push_back(40);
-    width.push_back(60);
+    width.push_back(7);
+    width.push_back(14);
+    width.push_back(21);
+    width.push_back(30);
 
     auto default_width =
         gauge::po::value<std::vector<uint32_t> >()->default_value(
@@ -627,7 +628,7 @@ BENCHMARK_OPTION(perpetual_options)
 
     options.add_options()
         ("width", default_width,
-        "Set the width for perpetual codes (absolute)");
+         "Set the width for perpetual codes (absolute)");
 
     gauge::runner::instance().register_options(options);
 }
@@ -641,7 +642,7 @@ typedef storage_benchmark<
     kodo::shallow_full_rlnc_decoder<fifi::binary8>>
     setup_rlnc_throughput8;
 
-BENCHMARK_F(setup_rlnc_throughput8, FullRLNC, Binary8, 5)
+BENCHMARK_F(setup_rlnc_throughput8, FullRLNC, Binary8, 1)
 {
     run_benchmark();
 }
@@ -655,7 +656,7 @@ BENCHMARK_F(setup_rlnc_throughput8, FullRLNC, Binary8, 5)
 //     kodo::thread_decoder<fifi::binary8>>
 //     setup_thread_throughput8;
 //
-// BENCHMARK_F(setup_thread_throughput8, Thread, Binary8, 5)
+// BENCHMARK_F(setup_thread_throughput8, Thread, Binary8, 1)
 // {
 //     run_benchmark();
 // }
@@ -665,7 +666,7 @@ BENCHMARK_F(setup_rlnc_throughput8, FullRLNC, Binary8, 5)
 //     kodo::thread_decoder<fifi::binary8>, true>
 //     setup_sparse_thread_throughput8;
 //
-// BENCHMARK_F(setup_sparse_thread_throughput8, SparseThread, Binary8, 5)
+// BENCHMARK_F(setup_sparse_thread_throughput8, SparseThread, Binary8, 1)
 // {
 //     run_benchmark();
 // }
