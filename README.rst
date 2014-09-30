@@ -2,14 +2,45 @@ Introduction
 ============
 
 The storage-benchmarks repository is used for the performance comparison of
-different erasure coding libraries, currently Jerasure, OpenFEC and Intels ISA.
+different erasure coding libraries, currently Kodo, Jerasure, OpenFEC and
+the Intel Storage Acceleration library (ISA).
+
+License
+-------
+
+1. Kodo
+.......
+To obtain a valid Kodo license **you must fill out the license request** form_.
+
+Kodo is available under a research and educational friendly license, see the
+details in the LICENSE.rst file.
+
+.. _form: http://steinwurf.com/license/
+
+2. ISA
+......
+See "About_bsd.txt" in the "isa-l_open_src_2.8" folder.
+
+3. Jerasure
+...........
+See "COPYING" in the "jerasure" folder.
+
+4. OpenFEC
+..........
+See "Licence_CeCILL_V2-en.txt" in the "openfec-1.3" folder.
+
+The libraries are benchmarked in standalone applications that implement a
+common benchmarking interface to create a framework for fair comparison.
+These standalone applications are licensed under the same terms as the
+original libraries (Kodo license, BSD or CeCILL).
+
 
 Installation
 =============
 
 Clone the repository::
 
-    git clone https://github.com/steinwurf-internal/storage-benchmarks.git
+    git clone https://github.com/steinwurf/storage-benchmarks.git
 
 Since some external libraries are added as git submodules, we need to run
 these extra commands::
@@ -24,10 +55,43 @@ Requirements
 1. A recent C++11 compiler
 2. yasm (for compiling the Assembly sources in ISA)
 
-How to Build It
+How to build it
 ===============
 
-The benchmarks can be built like any other Steinwurf project::
+The benchmarks can be built with waf::
 
   python waf configure
   python waf build
+
+How to run the benchmarks
+=========================
+
+The benchmark applications are built in the ``./build/linux/benchmark`` folder,
+and they can be started with the following commands::
+
+  build/linux/benchmark/kodo_storage/kodo_storage
+  build/linux/benchmark/isa_throughput/isa_throughput
+  build/linux/benchmark/jerasure_throughput/jerasure_throughput
+  build/linux/benchmark/openfec_throughput/openfec_throughput
+
+By default, these applications will execute a few basic benchmarks. Additional
+parameters can be given to these binaries to customize the benchmark runs:
+
+--symbols=N
+
+--symbol_size=N
+
+--loss_rate=0.x
+
+--type=encoder/decoder
+
+--python_file=filename
+
+--csv_file=filename
+
+--json_file=filename
+
+For example, kodo_storage can be invoked with these parameters::
+
+  build/linux/benchmark/kodo_storage/kodo_storage --symbols=100 --symbol_size=1000000 --loss_rate=0.2 --python_file=myfile.py --csv_file=myfile.csv
+
