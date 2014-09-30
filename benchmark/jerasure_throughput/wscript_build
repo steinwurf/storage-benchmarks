@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 bld.program(
-    features = 'cxx benchmark',
+    features = 'cxx test benchmark',
     source   = ['jerasure.cpp'],
     target   = 'jerasure_throughput',
     use      = ['jerasure', 'gf_complete',

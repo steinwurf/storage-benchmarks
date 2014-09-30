@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 bld.program(
-    features = 'cxx benchmark',
+    features = 'cxx test benchmark',
     source   = ['isa.cpp'],
     target   = 'isa_throughput',
     use      = ['isa',

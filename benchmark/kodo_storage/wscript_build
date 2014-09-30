@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 bld.program(
-    features = 'cxx benchmark',
+    features = 'cxx test benchmark',
     source   = ['kodo_storage.cpp'],
     target   = 'kodo_storage',
     use = ['kodo_includes', 'fifi', 'sak_includes',

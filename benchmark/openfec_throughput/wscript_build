@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 bld.program(
-    features = 'cxx benchmark',
+    features = 'cxx test benchmark',
     source   = ['openfec.cpp'],
     target   = 'openfec_throughput',
     use      = ['openfec',
