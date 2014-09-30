@@ -74,22 +74,29 @@ and they can be started with the following commands::
   build/linux/benchmark/jerasure_throughput/jerasure_throughput
   build/linux/benchmark/openfec_throughput/openfec_throughput
 
-By default, these applications will execute a few basic benchmarks. Additional
-parameters can be given to these binaries to customize the benchmark runs:
+By default, these applications will execute some basic benchmarks with the
+same default parameters for all libraries.
 
---symbols=N
+Additional parameters can be given to these binaries to customize 
+the benchmark runs:
 
---symbol_size=N
+``--symbols=N``: the number of symbols in a block/generation
 
---loss_rate=0.x
+``--symbol_size=N``: the size of each symbol in bytes
 
---type=encoder/decoder
+``--loss_rate=0.x``: the ratio of erased original symbols
 
---python_file=filename
+``--type=encoder/decoder``: enables only the encoder or decoder benchmark type
 
---csv_file=filename
+``--python_file=filename``: saves the results as a Python dictionary to the given file
 
---json_file=filename
+``--csv_file=filename``: saves the results as a CSV table to the given file
+
+``--json_file=filename``: saves the results as a JSON document to the given file
+
+Extra option for kodo_storage:
+
+``--density=0.x``: the code density used for the sparse RLNC benchmark
 
 For example, kodo_storage can be invoked with these parameters::
 
