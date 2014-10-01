@@ -322,6 +322,7 @@ BENCHMARK_OPTION(throughput_options)
 
     // Symbol size must be a multiple of 32
     std::vector<uint32_t> symbol_size;
+    symbol_size.push_back(1024);
     symbol_size.push_back(32000);
     symbol_size.push_back(64000);
     symbol_size.push_back(128000);
