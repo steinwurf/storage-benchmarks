@@ -559,6 +559,7 @@ BENCHMARK_OPTION(throughput_options)
             loss_rate, "")->multitoken();
 
     std::vector<uint32_t> symbol_size;
+    symbol_size.push_back(1024);
     symbol_size.push_back(32000);
     symbol_size.push_back(64000);
     symbol_size.push_back(128000);
@@ -621,6 +622,7 @@ BENCHMARK_OPTION(perpetual_options)
     width.push_back(14);
     width.push_back(21);
     width.push_back(30);
+    width.push_back(60);
 
     auto default_width =
         gauge::po::value<std::vector<uint32_t> >()->default_value(
