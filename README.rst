@@ -5,6 +5,11 @@ The storage-benchmarks repository is used for the performance comparison of
 different erasure coding libraries, currently Kodo, Jerasure, OpenFEC and
 the Intel Storage Acceleration library (ISA).
 
+If you have any questions or suggestions about the benchmarks, please contact
+us at our developer mailing list (hosted at Google Groups):
+
+* http://groups.google.com/group/steinwurf-dev
+
 License
 -------
 
@@ -77,7 +82,29 @@ and they can be started with the following commands::
 By default, these applications will execute some basic benchmarks with the
 same default parameters for all libraries.
 
-Additional parameters can be given to these binaries to customize 
+The benchmarked scenario is the same in all cases:
+
+  1. A random data block is generated which consists of a given number of
+     original symbols (specified by the `symbols` parameter).
+  2. Encoding: This data block is used to generate some encoded symbols
+     (the encoding throughput is measured during this step)
+  3. Several original symbols are erased from the data block (this is
+     specified by the `loss_rate` parameter)
+  4. Decoding: The erased original symbols are reconstructed using the
+     encoded symbols (the decoding throughput is measured during this step)
+
+The benchmark results show the following metrics:
+
+  - goodput (encoding): the total number of encoded bytes divided by
+    processing time (measured in MegaBytes/second)
+  - extra_symbols (decoding): some codecs might need more encoded symbols than
+    the number of erased symbols to reconstruct the original symbols, the
+    extra_symbols show this difference (NB: this is measured in number of
+    packets, not in MB/s as shown in the output)
+  - goodput (decoding): the total number of reconstructed bytes divided by
+    processing time (measured in MegaBytes/second)
+
+Additional parameters can be given to these binaries to customize
 the benchmark runs:
 
 ``--symbols=N``: the number of symbols in a block/generation
