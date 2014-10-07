@@ -56,7 +56,7 @@ def options(opt):
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='tables',
         git_repository='github.com/steinwurf/tables.git',
-        major_version=4))
+        major_version=5))
 
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='waf-tools',
