@@ -27,10 +27,10 @@ template<class Encoder, class Decoder, bool Relaxed = false>
 struct storage_benchmark : public gauge::time_benchmark
 {
     typedef typename Encoder::factory encoder_factory;
-    typedef typename Encoder::pointer encoder_ptr;
+    typedef typename Encoder::factory::pointer encoder_ptr;
 
     typedef typename Decoder::factory decoder_factory;
-    typedef typename Decoder::pointer decoder_ptr;
+    typedef typename Decoder::factory::pointer decoder_ptr;
 
     void init()
     {
