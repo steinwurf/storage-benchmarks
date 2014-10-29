@@ -20,9 +20,17 @@ extern "C"
 
 #include "../throughput_benchmark.hpp"
 
-struct reed_sol_van_encoder
+enum coding_technique
 {
-    reed_sol_van_encoder(
+    reed_sol_van,
+    cauchy_orig,
+    cauchy_good
+};
+
+template<coding_technique Code>
+struct jerasure_encoder
+{
+    jerasure_encoder(
         uint32_t symbols, uint32_t symbol_size, uint32_t encoded_symbols) :
         m_symbols(symbols), m_symbol_size(symbol_size), matrix(0)
     {
@@ -57,7 +65,7 @@ struct reed_sol_van_encoder
         matrix = reed_sol_vandermonde_coding_matrix(k, m, w);
     }
 
-    ~reed_sol_van_encoder()
+    ~jerasure_encoder()
     {
         // matrix was allocated with malloc by jerasure: deallocate with free!
         if (matrix) { free(matrix); matrix = 0; }
@@ -94,7 +102,8 @@ struct reed_sol_van_encoder
 
 protected:
 
-    friend struct reed_sol_van_decoder;
+    template<coding_technique T>
+    friend struct jerasure_decoder;
 
     /// The input data
     std::vector<uint8_t> m_data_in;
@@ -118,12 +127,14 @@ protected:
     std::vector<char*> data;
     std::vector<char*> coding;
     int* matrix;
+    int* bitmatrix;
+    int** schedule;
 };
 
-
-struct reed_sol_van_decoder
+template<coding_technique Code>
+struct jerasure_decoder
 {
-    reed_sol_van_decoder(
+    jerasure_decoder(
         uint32_t symbols, uint32_t symbol_size, uint32_t encoded_symbols) :
         m_symbols(symbols), m_symbol_size(symbol_size), matrix(0)
     {
@@ -164,13 +175,14 @@ struct reed_sol_van_decoder
         matrix = reed_sol_vandermonde_coding_matrix(k, m, w);
     }
 
-    ~reed_sol_van_decoder()
+    ~jerasure_decoder()
     {
         // matrix was allocated with malloc by jerasure: deallocate with free!
         if (matrix) { free(matrix); matrix = 0; }
     }
 
-    uint32_t decode_all(std::shared_ptr<reed_sol_van_encoder> encoder)
+    template<coding_technique T>
+    uint32_t decode_all(std::shared_ptr<jerasure_encoder<T>> encoder)
     {
         assert(matrix != 0);
         uint32_t payload_count = encoder->m_payloads.size();
@@ -200,7 +212,8 @@ struct reed_sol_van_decoder
         return payload_count;
     }
 
-    bool verify_data(std::shared_ptr<reed_sol_van_encoder> encoder)
+    template<coding_technique T>
+    bool verify_data(std::shared_ptr<jerasure_encoder<T>> encoder)
     {
         assert(m_data_out.size() == encoder->m_data_in.size());
 
@@ -299,7 +312,9 @@ BENCHMARK_OPTION(throughput_options)
 // Reed-Solomon Vandermonde
 //------------------------------------------------------------------
 
-typedef throughput_benchmark<reed_sol_van_encoder, reed_sol_van_decoder>
+typedef throughput_benchmark<
+    jerasure_encoder<coding_technique::reed_sol_van>,
+    jerasure_decoder<coding_technique::reed_sol_van>>
     reed_sol_van_throughput;
 
 BENCHMARK_F(reed_sol_van_throughput, Jerasure, ReedSolVan, 1)
