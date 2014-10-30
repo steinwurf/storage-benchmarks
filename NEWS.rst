@@ -6,6 +6,12 @@ detailed list of every change, see the Git log.
 
 Latest
 ------
+* Minor: Disabled the SIMD flags that are not supported by the current CPU when
+  compiling the Jerasure benchmarks. Note that Jerasure does not have any CPU
+  dispatch logic, so enabling all SIMD flags would result in illegal instruction
+  errors on older CPUs.
+* Minor: Added Jerasure benchmarks with the Cauchy_Orig and Cauchy_Good
+  coding techniques (to compare against the ReedSolVan default technique)
 * Major: Upgrade to kodo 19
 * Major: Upgrade to fifi 14
 * Major: Upgrade to sak 12
