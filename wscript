@@ -12,7 +12,6 @@ def recurse_helper(ctx, name):
         p = ctx.dependency_path(name)
         ctx.recurse([p])
 
-
 def options(opt):
 
     import waflib.extras.wurf_dependency_bundle as bundle
@@ -102,6 +101,37 @@ def configure(conf):
         conf.env.AS_TGT_F = ['-o']
         conf.env.ASLNK_TGT_F = ['-o']
 
+def get_cpu_flags(conf):
+    """
+    Returns compiler flags for the available instruction sets on this CPU
+    """
+    cflags = ['-mmmx', '-msse', '-msse2', '-msse3', '-mssse3',
+              '-mpclmul', '-msse4.1', '-msse4.2', '-mavx']
+
+    if conf.is_mkspec_platform('linux'):
+        # Check the supported CPU flags in /proc/cpuinfo
+        cpuflags = None
+        with open('/proc/cpuinfo', 'r') as cpuinfo:
+            for line in cpuinfo:
+                if line.startswith('flags'):
+                    cpuflags = line.split()
+                    break
+
+        if cpuflags:
+            cflags = []
+            if 'mmx' in cpuflags: cflags += ['-mmmx']
+            if 'sse' in cpuflags: cflags += ['-msse']
+            if 'sse2' in cpuflags: cflags += ['-msse2']
+            # pni stands for Prescott New Instructions (i.e. SSE-3)
+            if 'pni' in cpuflags: cflags += ['-msse3']
+            if 'ssse3' in cpuflags: cflags += ['-mssse3']
+            if 'pclmulqdq' in cpuflags: cflags += ['-mpclmul']
+            if 'sse4_1' in cpuflags: cflags += ['-msse4.1']
+            if 'sse4_2' in cpuflags: cflags += ['-msse4.2']
+            if 'avx' in cpuflags: cflags += ['-mavx']
+
+    return cflags
+
 
 def set_simd_flags(conf):
     """
@@ -113,9 +143,7 @@ def set_simd_flags(conf):
 
     if 'gcc' in CC or 'clang' in CC:
         flags += ['-O3', '-fPIC']
-        flags += conf.mkspec_try_flags(
-            'cflags', ['-mmmx', '-msse', '-msse2', '-msse3', '-mssse3',
-                       '-mpclmul', '-msse4.1', '-msse4.2', '-mavx'])
+        flags += conf.mkspec_try_flags('cflags', get_cpu_flags(conf))
 
         if '-msse' in flags:
             defines.append('INTEL_SSE')
