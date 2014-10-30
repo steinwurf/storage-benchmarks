@@ -142,7 +142,7 @@ struct throughput_benchmark : public gauge::time_benchmark
                 for (const auto& p : symbol_size)
                 {
                     // Symbol size must be a multiple of 32
-                    assert(p % 32 == 0);
+                    assert(p % 64 == 0);
 
                     for (const auto& t : types)
                     {
