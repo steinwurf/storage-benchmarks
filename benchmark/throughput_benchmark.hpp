@@ -12,7 +12,7 @@
 #include <gauge/gauge.hpp>
 
 
-template<class Encoder, class Decoder>
+template<class Encoder, class Decoder, bool Relaxed = false>
 struct throughput_benchmark : public gauge::time_benchmark
 {
     void init()
@@ -73,17 +73,21 @@ struct throughput_benchmark : public gauge::time_benchmark
 
         results.set_value("goodput", measurement());
 
-        gauge::config_set cs = get_current_configuration();
-        std::string type = cs.get_value<std::string>("type");
-
-        if (type == "decoder")
+        if (Relaxed)
         {
-            if (!results.has_column("extra_symbols"))
-                results.add_column("extra_symbols");
+            gauge::config_set cs = get_current_configuration();
+            std::string type = cs.get_value<std::string>("type");
 
-            uint32_t erased_symbols = cs.get_value<uint32_t>("erased_symbols");
-            uint32_t extra_symbols = m_processed_symbols - erased_symbols;
-            results.set_value("extra_symbols", extra_symbols);
+            if (type == "decoder")
+            {
+                if (!results.has_column("extra_symbols"))
+                    results.add_column("extra_symbols");
+
+                uint32_t erased_symbols =
+                    cs.get_value<uint32_t>("erased_symbols");
+                uint32_t extra_symbols = m_processed_symbols - erased_symbols;
+                results.set_value("extra_symbols", extra_symbols);
+            }
         }
     }
 
@@ -138,7 +142,7 @@ struct throughput_benchmark : public gauge::time_benchmark
                 for (const auto& p : symbol_size)
                 {
                     // Symbol size must be a multiple of 32
-                    assert(p % 32 == 0);
+                    assert(p % 64 == 0);
 
                     for (const auto& t : types)
                     {

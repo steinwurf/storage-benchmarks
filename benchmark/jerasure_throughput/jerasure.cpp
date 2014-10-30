@@ -16,20 +16,56 @@ extern "C"
 #include <gf_rand.h>
 #include <jerasure.h>
 #include <reed_sol.h>
+#include <cauchy.h>
 }
 
 #include "../throughput_benchmark.hpp"
 
-struct reed_sol_van_encoder
+enum coding_technique
 {
-    reed_sol_van_encoder(
+    reed_sol_van,
+    cauchy_orig,
+    cauchy_good
+};
+
+inline uint32_t optimal_packet_size(int w, uint32_t symbol_size)
+{
+    // Get default value for packet size
+    // Constraint: Symbol size must be a multiple of w * packet_size * 4
+    uint32_t packet_size = symbol_size / w / 4;
+
+    // The optimal value is just below 10000
+    if (packet_size > 10000)
+    {
+        // Try to divide by 2
+        while (packet_size > 10000 && (packet_size % 2) == 0)
+            packet_size = packet_size / 2;
+
+        // Try to divide by 3
+        while (packet_size > 10000 && (packet_size % 3) == 0)
+            packet_size = packet_size / 3;
+
+        // Try to divide by 5
+        while (packet_size > 10000 && (packet_size % 5) == 0)
+            packet_size = packet_size / 5;
+    }
+
+    return packet_size;
+}
+
+template<coding_technique Code>
+struct jerasure_encoder
+{
+    jerasure_encoder(
         uint32_t symbols, uint32_t symbol_size, uint32_t encoded_symbols) :
-        m_symbols(symbols), m_symbol_size(symbol_size), matrix(0)
+        m_symbols(symbols), m_symbol_size(symbol_size), matrix(0), bitmatrix(0)
     {
         k = m_symbols;
         m = encoded_symbols;
         w = 8;
         m_block_size = m_symbols * m_symbol_size;
+        // Choose optimal value for packet size
+        m_packet_size = optimal_packet_size(w, symbol_size);
 
         // Resize data and coding pointer vectors
         data.resize(k);
@@ -54,13 +90,29 @@ struct reed_sol_van_encoder
             m_payloads[i].resize(m_symbol_size);
         }
 
-        matrix = reed_sol_vandermonde_coding_matrix(k, m, w);
+        switch (Code)
+        {
+        case coding_technique::reed_sol_van:
+            matrix = reed_sol_vandermonde_coding_matrix(k, m, w);
+            break;
+        case coding_technique::cauchy_orig:
+            matrix = cauchy_original_coding_matrix(k, m, w);
+            bitmatrix = jerasure_matrix_to_bitmatrix(k, m, w, matrix);
+            schedule = jerasure_smart_bitmatrix_to_schedule(k, m, w, bitmatrix);
+            break;
+        case coding_technique::cauchy_good:
+            matrix = cauchy_good_general_coding_matrix(k, m, w);
+            bitmatrix = jerasure_matrix_to_bitmatrix(k, m, w, matrix);
+            schedule = jerasure_smart_bitmatrix_to_schedule(k, m, w, bitmatrix);
+            break;
+        }
     }
 
-    ~reed_sol_van_encoder()
+    ~jerasure_encoder()
     {
         // matrix was allocated with malloc by jerasure: deallocate with free!
         if (matrix) { free(matrix); matrix = 0; }
+        if (bitmatrix) { free(bitmatrix); bitmatrix = 0; }
     }
 
     void set_symbols(uint8_t* ptr, uint32_t size)
@@ -83,8 +135,18 @@ struct reed_sol_van_encoder
             coding[i] = (char*)&(m_payloads[i][0]);
         }
 
-        jerasure_matrix_encode(k, m, w, matrix, &data[0], &coding[0],
-                               m_symbol_size);
+        switch (Code)
+        {
+        case coding_technique::reed_sol_van:
+            jerasure_matrix_encode(k, m, w, matrix, &data[0], &coding[0],
+                                   m_symbol_size);
+            break;
+        case coding_technique::cauchy_orig:
+        case coding_technique::cauchy_good:
+            jerasure_schedule_encode(k, m, w, schedule, &data[0], &coding[0],
+                                     m_symbol_size, m_packet_size);
+            break;
+        }
     }
 
     uint32_t block_size() { return m_block_size; }
@@ -94,7 +156,8 @@ struct reed_sol_van_encoder
 
 protected:
 
-    friend struct reed_sol_van_decoder;
+    template<coding_technique T>
+    friend struct jerasure_decoder;
 
     /// The input data
     std::vector<uint8_t> m_data_in;
@@ -118,14 +181,18 @@ protected:
     std::vector<char*> data;
     std::vector<char*> coding;
     int* matrix;
+    int* bitmatrix;
+    int** schedule;
+    // Packet size used by Cauchy techniques
+    uint32_t m_packet_size;
 };
 
-
-struct reed_sol_van_decoder
+template<coding_technique Code>
+struct jerasure_decoder
 {
-    reed_sol_van_decoder(
+    jerasure_decoder(
         uint32_t symbols, uint32_t symbol_size, uint32_t encoded_symbols) :
-        m_symbols(symbols), m_symbol_size(symbol_size), matrix(0)
+        m_symbols(symbols), m_symbol_size(symbol_size), matrix(0), bitmatrix(0)
     {
         k = m_symbols;
         m = encoded_symbols;
@@ -133,6 +200,8 @@ struct reed_sol_van_decoder
         m_block_size = m_symbols * m_symbol_size;
         m_decoding_result = -1;
         uint32_t payload_count = encoded_symbols;
+        // Choose optimal value for packet size
+        m_packet_size = optimal_packet_size(w, symbol_size);
 
         // Resize data and coding pointer vectors
         data.resize(k);
@@ -161,16 +230,31 @@ struct reed_sol_van_decoder
 
         m_data_out.resize(m_block_size);
 
-        matrix = reed_sol_vandermonde_coding_matrix(k, m, w);
+        switch (Code)
+        {
+        case coding_technique::reed_sol_van:
+            matrix = reed_sol_vandermonde_coding_matrix(k, m, w);
+            break;
+        case coding_technique::cauchy_orig:
+            matrix = cauchy_original_coding_matrix(k, m, w);
+            bitmatrix = jerasure_matrix_to_bitmatrix(k, m, w, matrix);
+            break;
+        case coding_technique::cauchy_good:
+            matrix = cauchy_good_general_coding_matrix(k, m, w);
+            bitmatrix = jerasure_matrix_to_bitmatrix(k, m, w, matrix);
+            break;
+        }
     }
 
-    ~reed_sol_van_decoder()
+    ~jerasure_decoder()
     {
         // matrix was allocated with malloc by jerasure: deallocate with free!
         if (matrix) { free(matrix); matrix = 0; }
+        if (bitmatrix) { free(bitmatrix); bitmatrix = 0; }
     }
 
-    uint32_t decode_all(std::shared_ptr<reed_sol_van_encoder> encoder)
+    template<coding_technique T>
+    uint32_t decode_all(std::shared_ptr<jerasure_encoder<T>> encoder)
     {
         assert(matrix != 0);
         uint32_t payload_count = encoder->m_payloads.size();
@@ -193,14 +277,29 @@ struct reed_sol_van_decoder
             coding[i] = (char*)&(encoder->m_payloads[i][0]);
         }
 
-        m_decoding_result =
-            jerasure_matrix_decode(k, m, w, matrix, 1, &erasures[0], &data[0],
-                                   &coding[0], m_symbol_size);
+        switch (Code)
+        {
+        case coding_technique::reed_sol_van:
+            m_decoding_result =
+                jerasure_matrix_decode(
+                    k, m, w, matrix, 1, &erasures[0],
+                    &data[0], &coding[0], m_symbol_size);
+
+            break;
+        case coding_technique::cauchy_orig:
+        case coding_technique::cauchy_good:
+            m_decoding_result =
+                jerasure_schedule_decode_lazy(
+                    k, m, w, bitmatrix, &erasures[0],
+                    &data[0], &coding[0], m_symbol_size, m_packet_size, 1);
+            break;
+        }
 
         return payload_count;
     }
 
-    bool verify_data(std::shared_ptr<reed_sol_van_encoder> encoder)
+    template<coding_technique T>
+    bool verify_data(std::shared_ptr<jerasure_encoder<T>> encoder)
     {
         assert(m_data_out.size() == encoder->m_data_in.size());
 
@@ -241,6 +340,10 @@ protected:
     std::vector<char*> data;
     std::vector<char*> coding;
     int* matrix;
+    int* bitmatrix;
+    // Packet size used by Cauchy techniques
+    uint32_t m_packet_size;
+
     std::set<uint32_t> erased;
     std::vector<int> erasures;
     int m_decoding_result;
@@ -299,10 +402,32 @@ BENCHMARK_OPTION(throughput_options)
 // Reed-Solomon Vandermonde
 //------------------------------------------------------------------
 
-typedef throughput_benchmark<reed_sol_van_encoder, reed_sol_van_decoder>
+typedef throughput_benchmark<
+    jerasure_encoder<coding_technique::reed_sol_van>,
+    jerasure_decoder<coding_technique::reed_sol_van>>
     reed_sol_van_throughput;
 
 BENCHMARK_F(reed_sol_van_throughput, Jerasure, ReedSolVan, 1)
+{
+    run_benchmark();
+}
+
+typedef throughput_benchmark<
+    jerasure_encoder<coding_technique::cauchy_orig>,
+    jerasure_decoder<coding_technique::cauchy_orig>>
+    cauchy_orig_throughput;
+
+BENCHMARK_F(cauchy_orig_throughput, Jerasure, CauchyOrig, 1)
+{
+    run_benchmark();
+}
+
+typedef throughput_benchmark<
+    jerasure_encoder<coding_technique::cauchy_good>,
+    jerasure_decoder<coding_technique::cauchy_good>>
+    cauchy_good_throughput;
+
+BENCHMARK_F(cauchy_good_throughput, Jerasure, CauchyGood, 1)
 {
     run_benchmark();
 }
