@@ -203,30 +203,6 @@ def build(bld):
     if '-O2' in bld.env['CFLAGS']:
         bld.env['CFLAGS'].remove('-O2')
 
-    jerasure_enabled = True
-    # Jerasure is not compatible with the VS compiler and it does not compile
-    # for 32-bit CPUs
-    if bld.is_mkspec_platform('windows') or bld.env['DEST_CPU'] == 'x86':
-        jerasure_enabled = False
-
-    if jerasure_enabled:
-        bld.stlib(
-            features='c',
-            source=bld.path.ant_glob('gf-complete/src/**/*.c'),
-            target='gf_complete',
-            includes=['gf-complete/include'],
-            export_includes=['gf-complete/include'],
-            use=['SIMD_SHARED'])
-
-        bld.stlib(
-            features='c',
-            source=bld.path.ant_glob('jerasure/src/**/*.c',
-                                     excl='jerasure/src/cauchy_best_r6.c'),
-            target='jerasure',
-            includes=['jerasure/include'],
-            export_includes=['jerasure/include'],
-            use=['SIMD_SHARED', 'gf_complete'])
-
     isa_enabled = True
     # ISA is not compatible with clang and the VS compiler and it does not
     # compile for 32-bit CPUs
@@ -285,5 +261,3 @@ def build(bld):
             bld.recurse('benchmark/openfec_throughput')
         if isa_enabled:
             bld.recurse('benchmark/isa_throughput')
-        if jerasure_enabled:
-            bld.recurse('benchmark/jerasure_throughput')

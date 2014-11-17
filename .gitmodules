@@ -1,6 +1,0 @@
-[submodule "gf-complete"]
-    path = gf-complete
-    url = https://bitbucket.org/jimplank/gf-complete.git
-[submodule "jerasure"]
-    path = jerasure
-    url = https://bitbucket.org/jimplank/jerasure.git
