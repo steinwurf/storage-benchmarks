@@ -2,7 +2,7 @@ Introduction
 ============
 
 The storage-benchmarks repository is used for the performance comparison of
-different erasure coding libraries, currently Kodo, Jerasure, OpenFEC and
+different erasure coding libraries, currently Kodo, OpenFEC and
 the Intel Storage Acceleration library (ISA).
 
 If you have any questions or suggestions about the benchmarks, please contact
@@ -26,11 +26,7 @@ details in the LICENSE.rst file.
 ......
 See "About_bsd.txt" in the "isa-l_open_src_2.8" folder.
 
-3. Jerasure
-...........
-See "COPYING" in the "jerasure" folder.
-
-4. OpenFEC
+3. OpenFEC
 ..........
 See "Licence_CeCILL_V2-en.txt" in the "openfec-1.3" folder.
 
@@ -76,7 +72,6 @@ and they can be started with the following commands::
 
   build/linux/benchmark/kodo_storage/kodo_storage
   build/linux/benchmark/isa_throughput/isa_throughput
-  build/linux/benchmark/jerasure_throughput/jerasure_throughput
   build/linux/benchmark/openfec_throughput/openfec_throughput
 
 By default, these applications will execute some basic benchmarks with the
@@ -111,7 +106,7 @@ the benchmark runs:
 
 ``--symbols=N``: the number of symbols in a block/generation
 
-``--symbol_size=N``: the size of each symbol in bytes (this should be a 
+``--symbol_size=N``: the size of each symbol in bytes (this should be a
 multiple of 64)
 
 ``--loss_rate=0.x``: the ratio of erased original symbols
@@ -136,7 +131,7 @@ We also have a helper script to run the benchmark applications in sequence.
 You can start it without parameters to use the default settings::
 
   sh run-all-benchmarks.sh
-  
+
 Or you can specify some parameters that will be used for every benchmark application::
 
   sh run-all-benchmarks.sh --runs=10 --symbols=16 --symbol_size=32000
