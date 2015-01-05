@@ -30,17 +30,17 @@ def options(opt):
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='gauge',
         git_repository='github.com/steinwurf/gauge.git',
-        major_version=7))
+        major_version=8))
 
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='fifi',
         git_repository='github.com/steinwurf/fifi.git',
-        major_version=14))
+        major_version=17))
 
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='kodo',
         git_repository='github.com/steinwurf/kodo.git',
-        major_version=19))
+        major_version=21))
 
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='platform',
@@ -50,7 +50,7 @@ def options(opt):
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='sak',
         git_repository='github.com/steinwurf/sak.git',
-        major_version=12))
+        major_version=14))
 
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='tables',
