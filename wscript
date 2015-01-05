@@ -219,12 +219,12 @@ def build(bld):
     if isa_enabled:
         bld.stlib(
             features='c asm',
-            source=bld.path.ant_glob('isa-l_open_src_2.8/isa/*.c') +
-            bld.path.ant_glob('isa-l_open_src_2.8/isa/*.asm'),
+            source=bld.path.ant_glob('isa-l_open_src_2.10/isa/*.c') +
+                   bld.path.ant_glob('isa-l_open_src_2.10/isa/*.asm'),
             target='isa',
             asflags=get_asmformat(bld),
-            includes=['isa-l_open_src_2.8/isa'],
-            export_includes=['isa-l_open_src_2.8/isa'])
+            includes=['isa-l_open_src_2.10/isa'],
+            export_includes=['isa-l_open_src_2.10/isa'])
 
     openfec_enabled = True
     # OpenFEC is not compatible with clang and the VS compiler
