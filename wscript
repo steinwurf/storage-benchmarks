@@ -48,6 +48,11 @@ def options(opt):
         major_version=1))
 
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
+        name='recycle',
+        git_repository='github.com/steinwurf/recycle.git',
+        major_version=1))
+
+    bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='sak',
         git_repository='github.com/steinwurf/sak.git',
         major_version=14))
@@ -84,6 +89,7 @@ def configure(conf):
         recurse_helper(conf, 'gauge')
         recurse_helper(conf, 'kodo')
         recurse_helper(conf, 'platform')
+        recurse_helper(conf, 'recycle')
         recurse_helper(conf, 'sak')
         recurse_helper(conf, 'tables')
 
@@ -248,6 +254,7 @@ def build(bld):
         recurse_helper(bld, 'gauge')
         recurse_helper(bld, 'kodo')
         recurse_helper(bld, 'platform')
+        recurse_helper(bld, 'recycle')
         recurse_helper(bld, 'sak')
         recurse_helper(bld, 'tables')
 

@@ -5,7 +5,7 @@ bld.program(
     features = 'cxx test benchmark',
     source   = ['kodo_storage.cpp'],
     target   = 'kodo_storage',
-    use = ['kodo_includes', 'fifi', 'sak_includes',
-           'cpuid', 'platform_includes',
-           'gtest', 'boost_includes', 'boost_system', 'boost_timer',
+    use = ['kodo_includes', 'fifi_includes', 'sak_includes',
+           'platform_includes', 'recycle_includes',
+           'boost_includes', 'boost_system', 'boost_timer',
            'boost_chrono', 'gauge'])
