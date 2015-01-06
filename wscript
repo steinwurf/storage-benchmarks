@@ -30,17 +30,17 @@ def options(opt):
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='gauge',
         git_repository='github.com/steinwurf/gauge.git',
-        major_version=7))
+        major_version=8))
 
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='fifi',
         git_repository='github.com/steinwurf/fifi.git',
-        major_version=14))
+        major_version=17))
 
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='kodo',
         git_repository='github.com/steinwurf/kodo.git',
-        major_version=19))
+        major_version=21))
 
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='platform',
@@ -48,9 +48,14 @@ def options(opt):
         major_version=1))
 
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
+        name='recycle',
+        git_repository='github.com/steinwurf/recycle.git',
+        major_version=1))
+
+    bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='sak',
         git_repository='github.com/steinwurf/sak.git',
-        major_version=12))
+        major_version=14))
 
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='tables',
@@ -84,6 +89,7 @@ def configure(conf):
         recurse_helper(conf, 'gauge')
         recurse_helper(conf, 'kodo')
         recurse_helper(conf, 'platform')
+        recurse_helper(conf, 'recycle')
         recurse_helper(conf, 'sak')
         recurse_helper(conf, 'tables')
 
@@ -213,12 +219,12 @@ def build(bld):
     if isa_enabled:
         bld.stlib(
             features='c asm',
-            source=bld.path.ant_glob('isa-l_open_src_2.8/isa/*.c') +
-            bld.path.ant_glob('isa-l_open_src_2.8/isa/*.asm'),
+            source=bld.path.ant_glob('isa-l_open_src_2.10/isa/*.c') +
+                   bld.path.ant_glob('isa-l_open_src_2.10/isa/*.asm'),
             target='isa',
             asflags=get_asmformat(bld),
-            includes=['isa-l_open_src_2.8/isa'],
-            export_includes=['isa-l_open_src_2.8/isa'])
+            includes=['isa-l_open_src_2.10/isa'],
+            export_includes=['isa-l_open_src_2.10/isa'])
 
     openfec_enabled = True
     # OpenFEC is not compatible with clang and the VS compiler
@@ -248,6 +254,7 @@ def build(bld):
         recurse_helper(bld, 'gauge')
         recurse_helper(bld, 'kodo')
         recurse_helper(bld, 'platform')
+        recurse_helper(bld, 'recycle')
         recurse_helper(bld, 'sak')
         recurse_helper(bld, 'tables')
 

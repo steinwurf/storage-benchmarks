@@ -74,7 +74,7 @@ struct isa_encoder
 
         // Make parity vects
         ec_init_tables(k, m - k, &a[k * k], g_tbls);
-        ec_encode_data_sse(m_symbol_size,
+        ec_encode_data(m_symbol_size,
             k, m - k, g_tbls, m_buffs, &m_buffs[k]);
     }
 
@@ -205,7 +205,7 @@ struct isa_decoder
 
         // Recover data
         ec_init_tables(k, nerrs, c, g_tbls);
-        ec_encode_data_sse(m_symbol_size,
+        ec_encode_data(m_symbol_size,
             k, nerrs, g_tbls, &data[0], &m_buffs[0]);
         m_decoding_result = 0;
 

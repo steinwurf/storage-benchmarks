@@ -24,7 +24,7 @@ details in the LICENSE.rst file.
 
 2. ISA
 ......
-See "About_bsd.txt" in the "isa-l_open_src_2.8" folder.
+See "About_bsd.txt" in the "isa-l_open_src_2.10" folder.
 
 3. OpenFEC
 ..........
@@ -35,6 +35,11 @@ common benchmarking interface to create a framework for fair comparison.
 These standalone applications are licensed under the same terms as the
 original libraries (Kodo license, BSD or CeCILL).
 
+Requirements
+============
+
+1. A recent C++11 compiler
+2. yasm (for compiling the Assembly sources in ISA)
 
 Installation
 =============
@@ -43,24 +48,12 @@ Clone the repository::
 
     git clone https://github.com/steinwurf/storage-benchmarks.git
 
-Since some external libraries are added as git submodules, we need to run
-these extra commands::
-
-    cd storage-benchmarks
-    git submodule init
-    git submodule update
-
-Requirements
-============
-
-1. A recent C++11 compiler
-2. yasm (for compiling the Assembly sources in ISA)
-
 How to build it
 ===============
 
 The benchmarks can be built with waf::
 
+  cd storage-benchmarks
   python waf configure
   python waf build
 

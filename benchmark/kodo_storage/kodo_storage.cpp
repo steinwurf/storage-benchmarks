@@ -19,7 +19,7 @@
 
 #include <kodo/has_systematic_encoder.hpp>
 #include <kodo/set_systematic_off.hpp>
-#include <kodo/rlnc/full_rlnc_codes.hpp>
+#include <kodo/rlnc/full_vector_codes.hpp>
 
 #include <tables/table.hpp>
 
@@ -600,8 +600,8 @@ BENCHMARK_OPTION(sparse_density_options)
 //------------------------------------------------------------------
 
 typedef storage_benchmark<
-    kodo::shallow_full_rlnc_encoder<fifi::binary8>,
-    kodo::shallow_full_rlnc_decoder<fifi::binary8>>
+    kodo::rlnc::shallow_full_vector_encoder<fifi::binary8>,
+    kodo::rlnc::shallow_full_vector_decoder<fifi::binary8>>
     setup_rlnc_throughput8;
 
 BENCHMARK_F(setup_rlnc_throughput8, FullRLNC, Binary8, 1)
@@ -614,8 +614,8 @@ BENCHMARK_F(setup_rlnc_throughput8, FullRLNC, Binary8, 1)
 //------------------------------------------------------------------
 
 typedef sparse_storage_benchmark<
-    kodo::shallow_sparse_full_rlnc_encoder<fifi::binary8>,
-    kodo::shallow_full_rlnc_decoder<fifi::binary8>, true>
+    kodo::rlnc::shallow_sparse_full_vector_encoder<fifi::binary8>,
+    kodo::rlnc::shallow_full_vector_decoder<fifi::binary8>, true>
     setup_sparse_rlnc_throughput8;
 
 BENCHMARK_F(setup_sparse_rlnc_throughput8, SparseFullRLNC, Binary8, 1)
