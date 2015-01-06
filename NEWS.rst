@@ -6,6 +6,9 @@ detailed list of every change, see the Git log.
 
 Latest
 ------
+* Major: Upgrade to kodo 21
+* Major: Upgrade to ISA 2.10
+* Major: Removed Jerasure (as it is no longer available)
 * Minor: Disabled the SIMD flags that are not supported by the current CPU when
   compiling the Jerasure benchmarks. Note that Jerasure does not have any CPU
   dispatch logic, so enabling all SIMD flags would result in illegal instruction
