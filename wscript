@@ -12,6 +12,7 @@ def recurse_helper(ctx, name):
         p = ctx.dependency_path(name)
         ctx.recurse([p])
 
+
 def options(opt):
 
     import waflib.extras.wurf_dependency_bundle as bundle
@@ -28,19 +29,19 @@ def options(opt):
         major_version=3))
 
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
-        name='gauge',
-        git_repository='github.com/steinwurf/gauge.git',
-        major_version=8))
-
-    bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='fifi',
         git_repository='github.com/steinwurf/fifi.git',
         major_version=17))
 
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
+        name='gauge',
+        git_repository='github.com/steinwurf/gauge.git',
+        major_version=8))
+
+    bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='kodo',
         git_repository='github.com/steinwurf/kodo.git',
-        major_version=21))
+        major_version=22))
 
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='platform',
@@ -107,6 +108,7 @@ def configure(conf):
         conf.env.AS_TGT_F = ['-o']
         conf.env.ASLNK_TGT_F = ['-o']
 
+
 def get_cpu_flags(conf):
     """
     Returns compiler flags for the available instruction sets on this CPU
@@ -125,16 +127,25 @@ def get_cpu_flags(conf):
 
         if cpuflags:
             cflags = []
-            if 'mmx' in cpuflags: cflags += ['-mmmx']
-            if 'sse' in cpuflags: cflags += ['-msse']
-            if 'sse2' in cpuflags: cflags += ['-msse2']
+            if 'mmx' in cpuflags:
+                cflags += ['-mmmx']
+            if 'sse' in cpuflags:
+                cflags += ['-msse']
+            if 'sse2' in cpuflags:
+                cflags += ['-msse2']
             # pni stands for Prescott New Instructions (i.e. SSE-3)
-            if 'pni' in cpuflags: cflags += ['-msse3']
-            if 'ssse3' in cpuflags: cflags += ['-mssse3']
-            if 'pclmulqdq' in cpuflags: cflags += ['-mpclmul']
-            if 'sse4_1' in cpuflags: cflags += ['-msse4.1']
-            if 'sse4_2' in cpuflags: cflags += ['-msse4.2']
-            if 'avx' in cpuflags: cflags += ['-mavx']
+            if 'pni' in cpuflags:
+                cflags += ['-msse3']
+            if 'ssse3' in cpuflags:
+                cflags += ['-mssse3']
+            if 'pclmulqdq' in cpuflags:
+                cflags += ['-mpclmul']
+            if 'sse4_1' in cpuflags:
+                cflags += ['-msse4.1']
+            if 'sse4_2' in cpuflags:
+                cflags += ['-msse4.2']
+            if 'avx' in cpuflags:
+                cflags += ['-mavx']
 
     return cflags
 
@@ -219,8 +230,9 @@ def build(bld):
     if isa_enabled:
         bld.stlib(
             features='c asm',
-            source=bld.path.ant_glob('isa-l_open_src_2.10/isa/*.c') +
-                   bld.path.ant_glob('isa-l_open_src_2.10/isa/*.asm'),
+            source=(
+                bld.path.ant_glob('isa-l_open_src_2.10/isa/*.c') +
+                bld.path.ant_glob('isa-l_open_src_2.10/isa/*.asm')),
             target='isa',
             asflags=get_asmformat(bld),
             includes=['isa-l_open_src_2.10/isa'],

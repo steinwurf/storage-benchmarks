@@ -6,6 +6,7 @@ detailed list of every change, see the Git log.
 
 Latest
 ------
+* Major: Upgrade to kodo 22
 * Major: Upgrade to kodo 21
 * Major: Upgrade to ISA 2.10
 * Major: Removed Jerasure (as it is no longer available)
