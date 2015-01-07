@@ -69,7 +69,7 @@ struct storage_benchmark : public gauge::time_benchmark
         }
         else if (type == "encoder")
         {
-            uint32_t payload_count = m_payloads.size();
+            uint32_t payload_count = (uint32_t)m_payloads.size();
             total_bytes = payload_count * symbol_size;
         }
         else
@@ -238,7 +238,7 @@ struct storage_benchmark : public gauge::time_benchmark
         if (kodo::has_systematic_encoder<Encoder>::value)
             kodo::set_systematic_off(m_encoder);
 
-        uint32_t payload_count = m_payloads.size();
+        uint32_t payload_count = (uint32_t)m_payloads.size();
 
         for (uint32_t i = 0; i < payload_count; ++i)
         {
@@ -249,7 +249,7 @@ struct storage_benchmark : public gauge::time_benchmark
 
     void decode_payloads()
     {
-        uint32_t payload_count = m_payloads.size();
+        uint32_t payload_count = (uint32_t)m_payloads.size();
 
         for (uint32_t i = 0; i < payload_count; ++i)
         {
