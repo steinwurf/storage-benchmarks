@@ -20,6 +20,7 @@
 #include <kodo/has_systematic_encoder.hpp>
 #include <kodo/set_systematic_off.hpp>
 #include <kodo/rlnc/full_vector_codes.hpp>
+#include <kodo/rlnc/perpetual_codes.hpp>
 
 #include <tables/table.hpp>
 
@@ -466,8 +467,7 @@ public:
     /// The type of the base benchmark
     typedef storage_benchmark<Encoder,Decoder,Relaxed> Super;
 
-    /// We need access to the encoder built to adjust the average number of
-    /// nonzero symbols
+    /// We need access to the encoder to adjust the perpetual width ratio
     using Super::m_encoder;
 
 public:
@@ -594,6 +594,23 @@ BENCHMARK_OPTION(sparse_density_options)
     gauge::runner::instance().register_options(options);
 }
 
+BENCHMARK_OPTION(perpetual_options)
+{
+    gauge::po::options_description options;
+
+    std::vector<double> width_ratio;
+    width_ratio.push_back(0.5);
+
+    auto default_width_ratio =
+        gauge::po::value<std::vector<double> >()->default_value(
+            width_ratio, "")->multitoken();
+
+    options.add_options()
+        ("width_ratio", default_width_ratio,
+        "Set the width ratio for perpetual codes");
+
+    gauge::runner::instance().register_options(options);
+}
 
 //------------------------------------------------------------------
 // FullRLNC
@@ -623,6 +640,19 @@ BENCHMARK_F(setup_sparse_rlnc_throughput8, SparseFullRLNC, Binary8, 1)
     run_benchmark();
 }
 
+//------------------------------------------------------------------
+// Shallow Perpetual RLNC
+//------------------------------------------------------------------
+
+typedef perpetual_storage_benchmark<
+    kodo::rlnc::shallow_perpetual_encoder<fifi::binary8>,
+    kodo::rlnc::shallow_perpetual_decoder<fifi::binary8>, true>
+    setup_perpetual_throughput8;
+
+BENCHMARK_F(setup_perpetual_throughput8, Perpetual, Binary8, 1)
+{
+    run_benchmark();
+}
 
 int main(int argc, const char* argv[])
 {
