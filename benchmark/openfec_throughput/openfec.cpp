@@ -340,7 +340,7 @@ BENCHMARK_OPTION(throughput_options)
 typedef throughput_benchmark<openfec_rs_encoder, openfec_rs_decoder>
     openfec_rs_throughput;
 
-BENCHMARK_F(openfec_rs_throughput, OpenFEC, ReedSolomon, 1)
+BENCHMARK_F_INLINE(openfec_rs_throughput, OpenFEC, ReedSolomon, 1)
 {
     run_benchmark();
 }

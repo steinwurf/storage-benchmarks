@@ -621,7 +621,7 @@ typedef storage_benchmark<
     kodo::rlnc::shallow_full_vector_decoder<fifi::binary8>>
     setup_rlnc_throughput8;
 
-BENCHMARK_F(setup_rlnc_throughput8, FullRLNC, Binary8, 1)
+BENCHMARK_F_INLINE(setup_rlnc_throughput8, FullRLNC, Binary8, 1)
 {
     run_benchmark();
 }
@@ -635,7 +635,7 @@ typedef sparse_storage_benchmark<
     kodo::rlnc::shallow_full_vector_decoder<fifi::binary8>, true>
     setup_sparse_rlnc_throughput8;
 
-BENCHMARK_F(setup_sparse_rlnc_throughput8, SparseFullRLNC, Binary8, 1)
+BENCHMARK_F_INLINE(setup_sparse_rlnc_throughput8, SparseFullRLNC, Binary8, 1)
 {
     run_benchmark();
 }
@@ -649,7 +649,7 @@ typedef perpetual_storage_benchmark<
     kodo::rlnc::shallow_perpetual_decoder<fifi::binary8>, true>
     setup_perpetual_throughput8;
 
-BENCHMARK_F(setup_perpetual_throughput8, Perpetual, Binary8, 1)
+BENCHMARK_F_INLINE(setup_perpetual_throughput8, Perpetual, Binary8, 1)
 {
     run_benchmark();
 }

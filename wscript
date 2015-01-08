@@ -36,7 +36,7 @@ def options(opt):
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='gauge',
         git_repository='github.com/steinwurf/gauge.git',
-        major_version=8))
+        major_version=9))
 
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='kodo',
