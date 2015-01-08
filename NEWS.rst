@@ -6,6 +6,7 @@ detailed list of every change, see the Git log.
 
 Latest
 ------
+* Minor: Update local dependency gauge to version 9.
 * Minor: Added a perpetual benchmark in kodo_storage
 * Major: Upgrade to kodo 22
 * Major: Upgrade to kodo 21

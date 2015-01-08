@@ -314,7 +314,7 @@ BENCHMARK_OPTION(throughput_options)
 typedef throughput_benchmark<isa_encoder, isa_decoder>
     isa_throughput;
 
-BENCHMARK_F(isa_throughput, ISA, ErasureCode, 1)
+BENCHMARK_F_INLINE(isa_throughput, ISA, ErasureCode, 1)
 {
     run_benchmark();
 }

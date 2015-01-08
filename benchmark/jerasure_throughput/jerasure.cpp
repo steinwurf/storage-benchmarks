@@ -407,7 +407,7 @@ typedef throughput_benchmark<
     jerasure_decoder<coding_technique::reed_sol_van>>
     reed_sol_van_throughput;
 
-BENCHMARK_F(reed_sol_van_throughput, Jerasure, ReedSolVan, 1)
+BENCHMARK_F_INLINE(reed_sol_van_throughput, Jerasure, ReedSolVan, 1)
 {
     run_benchmark();
 }
@@ -417,7 +417,7 @@ typedef throughput_benchmark<
     jerasure_decoder<coding_technique::cauchy_orig>>
     cauchy_orig_throughput;
 
-BENCHMARK_F(cauchy_orig_throughput, Jerasure, CauchyOrig, 1)
+BENCHMARK_F_INLINE(cauchy_orig_throughput, Jerasure, CauchyOrig, 1)
 {
     run_benchmark();
 }
@@ -427,7 +427,7 @@ typedef throughput_benchmark<
     jerasure_decoder<coding_technique::cauchy_good>>
     cauchy_good_throughput;
 
-BENCHMARK_F(cauchy_good_throughput, Jerasure, CauchyGood, 1)
+BENCHMARK_F_INLINE(cauchy_good_throughput, Jerasure, CauchyGood, 1)
 {
     run_benchmark();
 }
