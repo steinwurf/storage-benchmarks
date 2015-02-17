@@ -24,7 +24,7 @@ details in the LICENSE.rst file.
 
 2. ISA
 ......
-See "About_bsd.txt" in the "isa-l_open_src_2.10" folder.
+See "About_bsd.txt" in the "isa-l_open_src_2.13" folder.
 
 3. OpenFEC
 ..........
