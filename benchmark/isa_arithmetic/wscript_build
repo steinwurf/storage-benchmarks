@@ -1,0 +1,8 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+bld.program(
+    features = 'cxx test benchmark',
+    source   = bld.path.ant_glob('*.cpp'),
+    target   = 'isa_arithmetic',
+    use      = ['isa', 'gauge'])
