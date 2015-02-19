@@ -126,9 +126,9 @@ public:
         }
     }
 
-    void test_body()
+    void run_benchmark()
     {
-        gauge::config_set cs = base::get_current_configuration();
+        gauge::config_set cs = get_current_configuration();
         uint32_t size = cs.get_value<uint32_t>("size");
         uint32_t vectors = cs.get_value<uint32_t>("vectors");
 
@@ -183,29 +183,16 @@ BENCHMARK_OPTION(arithmetic_options)
     gauge::po::options_description options;
 
     options.add_options()
-        ("size",gauge::po::value<std::vector<uint32_t>>()->default_value(
-    {64,1600}, "")->multitoken(), "Set the size of a vector in bytes");
+        ("size", gauge::po::value<std::vector<uint32_t>>()->default_value(
+        {1000000}, "")->multitoken(), "Set the size of a vector in bytes");
 
     options.add_options()
         ("vectors", gauge::po::value<std::vector<uint32_t>>()->
-        default_value({16,64,256}, "")->multitoken(),
+        default_value({8,16,32}, "")->multitoken(),
         "Set the number of vectors to perform the operations on");
 
     gauge::runner::instance().register_options(options);
 }
-
-//------------------------------------------------------------------
-// ISA Erasure Code
-//------------------------------------------------------------------
-
-typedef throughput_benchmark<isa_encoder, isa_decoder>
-    isa_throughput;
-
-BENCHMARK_F_INLINE(isa_throughput, ISA, ErasureCode, 1)
-{
-    run_benchmark();
-}
-
 
 //------------------------------------------------------------------
 // ISA Arithmetic
