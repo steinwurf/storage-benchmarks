@@ -12,7 +12,7 @@
 #include <vector>
 #include <set>
 
-//#include <sak/aligned_allocator.hpp>
+#include <sak/aligned_allocator.hpp>
 
 #include <gauge/gauge.hpp>
 
@@ -96,34 +96,34 @@ public:
         uint32_t vectors = cs.get_value<uint32_t>("vectors");
 
         // Prepare the continuous data blocks
-        m_data_one.resize(vectors * size);
-        m_data_two.resize(vectors * size);
-
-        for (uint32_t i = 0; i < size; ++i)
-        {
-            m_data_one[i] = rand() % 256;
-            m_data_two[i] = rand() % 256;
-        }
+        m_data_one.resize(vectors);
+        m_data_two.resize(vectors);
 
         // Prepare the symbol pointers
         m_symbols_one.resize(vectors);
         m_symbols_two.resize(vectors);
 
+
+        //void* buf = 0;
         for (uint32_t i = 0; i < vectors; ++i)
         {
-            m_symbols_one[i] = &m_data_one[i * size];
-            m_symbols_two[i] = &m_data_two[i * size];
+            m_data_one[i].resize(size);
+
+            m_symbols_one[i] = m_data_one[i].data();
+            for (uint32_t j = 0; j < size; ++j)
+                m_symbols_one[i][j] = rand() % 256;
         }
 
-        // Prepare constants, for block encoding you need a coefficient per
-        // source symbol to produce one output symbol. In our benchmark we
-        // "simulate" as many source vectors as destination vectors, so we
-        // need vectors*vectors constants.
-        m_constants.resize(vectors * vectors);
-        for(auto& c : m_constants)
+        for (uint32_t i = 0; i < vectors; ++i)
         {
-            c = rand() % 256;
+            m_data_two[i].resize(size);
+
+            m_symbols_two[i] = m_data_two[i].data();
+            for (uint32_t j = 0; j < size; ++j)
+                m_symbols_two[i][j] = rand() % 256;
         }
+
+        gf_gen_rs_matrix(a, vectors, vectors);
     }
 
     void run_benchmark()
@@ -132,13 +132,11 @@ public:
         uint32_t size = cs.get_value<uint32_t>("size");
         uint32_t vectors = cs.get_value<uint32_t>("vectors");
 
-        gf_gen_rs_matrix(a, vectors, vectors);
-
-        // Make parity vects
-        ec_init_tables(vectors, vectors, &a[vectors * vectors], g_tbls);
-
         RUN
         {
+            // Make parity vects
+            ec_init_tables(vectors, vectors, &a[vectors * vectors], g_tbls);
+
             for (uint32_t i = 0; i < vectors; ++i)
             {
                 gf_vect_dot_prod(size, vectors, g_tbls,
@@ -149,14 +147,11 @@ public:
 
 protected:
 
-    //uint8_t* m_buffs[TEST_SOURCES];
     uint8_t a[MMAX*KMAX];
     uint8_t g_tbls[KMAX*TEST_SOURCES*32];
 
-
     /// Type of the aligned vector
-    //typedef std::vector<value_type, sak::aligned_allocator<value_type>>
-    typedef std::vector<value_type>
+    typedef std::vector<value_type, sak::aligned_allocator<value_type>>
         aligned_vector;
 
     /// The first buffer of vectors
@@ -165,14 +160,143 @@ protected:
     /// The second buffer of vectors
     std::vector<value_type*> m_symbols_two;
 
-    /// Buffer for constants
-    std::vector<value_type> m_constants;
+    /// Random data for the first data buffer
+    std::vector<aligned_vector> m_data_one;
 
-    /// Random data for the first continuous buffer
-    aligned_vector m_data_one;
+    /// Random data for the second data buffer
+    std::vector<aligned_vector> m_data_two;
+};
 
-    /// Random data for the second continuous buffer
-    aligned_vector m_data_two;
+class arithmetic2_setup : public arithmetic_setup
+{
+public:
+
+    using base = arithmetic_setup;
+
+    using base::m_symbols_one;
+    using base::m_symbols_two;
+    using base::g_tbls;
+    using base::a;
+
+public:
+
+    void run_benchmark()
+    {
+        gauge::config_set cs = get_current_configuration();
+        uint32_t size = cs.get_value<uint32_t>("size");
+        uint32_t vectors = cs.get_value<uint32_t>("vectors");
+
+        RUN
+        {
+            // Make parity vects
+            ec_init_tables(vectors, vectors, &a[vectors * vectors], g_tbls);
+
+            uint32_t dest_vectors = vectors;
+            uint8_t** data = m_symbols_two.data();
+            uint8_t** coding = m_symbols_one.data();
+            uint8_t* table = base::g_tbls;
+
+            while (dest_vectors >= 2)
+            {
+                gf_2vect_dot_prod_avx2(size, vectors, table, data, coding);
+                table += 2 * vectors * 32;
+                coding += 2;
+                dest_vectors -= 2;
+            }
+
+            if (dest_vectors > 0)
+            {
+                gf_vect_dot_prod_avx2(size, vectors, table, data, *coding);
+            }
+        }
+    }
+};
+
+class arithmetic4_setup : public arithmetic_setup
+{
+public:
+
+    using base = arithmetic_setup;
+
+    using base::m_symbols_one;
+    using base::m_symbols_two;
+    using base::g_tbls;
+    using base::a;
+
+public:
+
+    void run_benchmark()
+    {
+        gauge::config_set cs = get_current_configuration();
+        uint32_t size = cs.get_value<uint32_t>("size");
+        uint32_t vectors = cs.get_value<uint32_t>("vectors");
+
+        RUN
+        {
+            // Make parity vects
+            ec_init_tables(vectors, vectors, &a[vectors * vectors], g_tbls);
+
+            uint32_t dest_vectors = vectors;
+            uint8_t** data = m_symbols_two.data();
+            uint8_t** coding = m_symbols_one.data();
+            uint8_t* table = base::g_tbls;
+
+            while (dest_vectors >= 4)
+            {
+                gf_4vect_dot_prod_avx2(size, vectors, table, data, coding);
+                table += 4 * vectors * 32;
+                coding += 4;
+                dest_vectors -= 4;
+            }
+            switch (dest_vectors)
+            {
+            case 3:
+                gf_3vect_dot_prod_avx2(size, vectors, table, data, coding);
+                break;
+            case 2:
+                gf_2vect_dot_prod_avx2(size, vectors, table, data, coding);
+                break;
+            case 1:
+                gf_vect_dot_prod_avx2(size, vectors, table, data, *coding);
+                break;
+            case 0:
+                break;
+            }
+        }
+    }
+};
+
+class arithmetic_encode_setup : public arithmetic_setup
+{
+public:
+
+    using base = arithmetic_setup;
+
+    using base::m_symbols_one;
+    using base::m_symbols_two;
+    using base::g_tbls;
+    using base::a;
+
+public:
+
+    void run_benchmark()
+    {
+        gauge::config_set cs = get_current_configuration();
+        uint32_t size = cs.get_value<uint32_t>("size");
+        uint32_t vectors = cs.get_value<uint32_t>("vectors");
+
+        RUN
+        {
+            // Make parity vects
+            ec_init_tables(vectors, vectors, &a[vectors * vectors], g_tbls);
+
+            uint8_t** data = m_symbols_two.data();
+            uint8_t** coding = m_symbols_one.data();
+            uint8_t* table = base::g_tbls;
+
+            ec_encode_data(size, vectors, vectors, table, data, coding);
+        }
+    }
 };
 
 /// Using this macro we may specify options. For specifying options
@@ -202,6 +326,22 @@ BENCHMARK_F_INLINE(arithmetic_setup, ISA, dot_product1, 1)
 {
     run_benchmark();
 }
+
+BENCHMARK_F_INLINE(arithmetic2_setup, ISA, dot_product2, 1)
+{
+    run_benchmark();
+}
+
+BENCHMARK_F_INLINE(arithmetic4_setup, ISA, dot_product4, 1)
+{
+    run_benchmark();
+}
+
+BENCHMARK_F_INLINE(arithmetic_encode_setup, ISA, dot_product_encode, 1)
+{
+    run_benchmark();
+}
+
 
 int main(int argc, const char* argv[])
 {
