@@ -280,3 +280,4 @@ def build(bld):
             bld.recurse('benchmark/openfec_throughput')
         if isa_enabled:
             bld.recurse('benchmark/isa_throughput')
+            bld.recurse('benchmark/isa_arithmetic')
