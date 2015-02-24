@@ -96,31 +96,23 @@ public:
         uint32_t vectors = cs.get_value<uint32_t>("vectors");
 
         // Prepare the continuous data blocks
-        m_data_one.resize(vectors);
-        m_data_two.resize(vectors);
+        m_data_one.resize(vectors * size);
+        m_data_two.resize(vectors * size);
+
+        for (uint32_t i = 0; i < size; ++i)
+        {
+            m_data_one[i] = rand() % 256;
+            m_data_two[i] = rand() % 256;
+        }
 
         // Prepare the symbol pointers
         m_symbols_one.resize(vectors);
         m_symbols_two.resize(vectors);
 
-
-        //void* buf = 0;
         for (uint32_t i = 0; i < vectors; ++i)
         {
-            m_data_one[i].resize(size);
-
-            m_symbols_one[i] = m_data_one[i].data();
-            for (uint32_t j = 0; j < size; ++j)
-                m_symbols_one[i][j] = rand() % 256;
-        }
-
-        for (uint32_t i = 0; i < vectors; ++i)
-        {
-            m_data_two[i].resize(size);
-
-            m_symbols_two[i] = m_data_two[i].data();
-            for (uint32_t j = 0; j < size; ++j)
-                m_symbols_two[i][j] = rand() % 256;
+            m_symbols_one[i] = &m_data_one[i * size];
+            m_symbols_two[i] = &m_data_two[i * size];
         }
 
         gf_gen_rs_matrix(a, vectors, vectors);
@@ -161,10 +153,10 @@ protected:
     std::vector<value_type*> m_symbols_two;
 
     /// Random data for the first data buffer
-    std::vector<aligned_vector> m_data_one;
+    aligned_vector m_data_one;
 
     /// Random data for the second data buffer
-    std::vector<aligned_vector> m_data_two;
+    aligned_vector m_data_two;
 };
 
 class arithmetic2_setup : public arithmetic_setup
