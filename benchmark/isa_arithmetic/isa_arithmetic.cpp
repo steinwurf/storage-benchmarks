@@ -291,6 +291,105 @@ public:
     }
 };
 
+class arithmetic_encode_sse_setup : public arithmetic_setup
+{
+public:
+
+    using base = arithmetic_setup;
+
+    using base::m_symbols_one;
+    using base::m_symbols_two;
+    using base::g_tbls;
+    using base::a;
+
+public:
+
+    void run_benchmark()
+    {
+        gauge::config_set cs = get_current_configuration();
+        uint32_t size = cs.get_value<uint32_t>("size");
+        uint32_t vectors = cs.get_value<uint32_t>("vectors");
+
+        RUN
+        {
+            // Make parity vects
+            ec_init_tables(vectors, vectors, &a[vectors * vectors], g_tbls);
+
+            uint8_t** data = m_symbols_two.data();
+            uint8_t** coding = m_symbols_one.data();
+            uint8_t* table = base::g_tbls;
+
+            ec_encode_data_sse(size, vectors, vectors, table, data, coding);
+        }
+    }
+};
+
+class arithmetic_encode_avx_setup : public arithmetic_setup
+{
+public:
+
+    using base = arithmetic_setup;
+
+    using base::m_symbols_one;
+    using base::m_symbols_two;
+    using base::g_tbls;
+    using base::a;
+
+public:
+
+    void run_benchmark()
+    {
+        gauge::config_set cs = get_current_configuration();
+        uint32_t size = cs.get_value<uint32_t>("size");
+        uint32_t vectors = cs.get_value<uint32_t>("vectors");
+
+        RUN
+        {
+            // Make parity vects
+            ec_init_tables(vectors, vectors, &a[vectors * vectors], g_tbls);
+
+            uint8_t** data = m_symbols_two.data();
+            uint8_t** coding = m_symbols_one.data();
+            uint8_t* table = base::g_tbls;
+
+            ec_encode_data_avx(size, vectors, vectors, table, data, coding);
+        }
+    }
+};
+
+class arithmetic_encode_avx2_setup : public arithmetic_setup
+{
+public:
+
+    using base = arithmetic_setup;
+
+    using base::m_symbols_one;
+    using base::m_symbols_two;
+    using base::g_tbls;
+    using base::a;
+
+public:
+
+    void run_benchmark()
+    {
+        gauge::config_set cs = get_current_configuration();
+        uint32_t size = cs.get_value<uint32_t>("size");
+        uint32_t vectors = cs.get_value<uint32_t>("vectors");
+
+        RUN
+        {
+            // Make parity vects
+            ec_init_tables(vectors, vectors, &a[vectors * vectors], g_tbls);
+
+            uint8_t** data = m_symbols_two.data();
+            uint8_t** coding = m_symbols_one.data();
+            uint8_t* table = base::g_tbls;
+
+            ec_encode_data_avx2(size, vectors, vectors, table, data, coding);
+        }
+    }
+};
+
 /// Using this macro we may specify options. For specifying options
 /// we use the boost program options library. So you may additional
 /// details on how to do it in the manual for that library.
@@ -334,6 +433,18 @@ BENCHMARK_F_INLINE(arithmetic_encode_setup, ISA, dot_product_encode, 1)
     run_benchmark();
 }
 
+BENCHMARK_F_INLINE(arithmetic_encode_sse_setup, ISA, dot_product_encode_sse, 1)
+{
+    run_benchmark();
+}
+BENCHMARK_F_INLINE(arithmetic_encode_avx_setup, ISA, dot_product_encode_avx, 1)
+{
+    run_benchmark();
+}
+BENCHMARK_F_INLINE(arithmetic_encode_avx2_setup, ISA, dot_product_encode_avx2, 1)
+{
+    run_benchmark();
+}
 
 int main(int argc, const char* argv[])
 {
