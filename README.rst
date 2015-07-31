@@ -28,7 +28,7 @@ See "About_bsd.txt" in the "isa-l_open_src_2.13" folder.
 
 3. OpenFEC
 ..........
-See "Licence_CeCILL_V2-en.txt" in the "openfec-1.3" folder.
+See "Licence_CeCILL_V2-en.txt" in the "openfec-1.4.2" folder.
 
 The libraries are benchmarked in standalone applications that implement a
 common benchmarking interface to create a framework for fair comparison.

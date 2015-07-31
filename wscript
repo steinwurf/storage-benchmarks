@@ -250,10 +250,10 @@ def build(bld):
 
         bld.stlib(
             features='c',
-            source=bld.path.ant_glob('openfec-1.3/src/**/*.c'),
+            source=bld.path.ant_glob('openfec-1.4.2/src/**/*.c'),
             target='openfec',
-            includes=['openfec-1.3/src'],
-            export_includes=['openfec-1.3/src'],
+            includes=['openfec-1.4.2/src'],
+            export_includes=['openfec-1.4.2/src'],
             use=['OPENFEC_SHARED', 'PTHREAD'])
 
     if bld.is_toplevel():
