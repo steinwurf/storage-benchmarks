@@ -17,7 +17,6 @@
 #include <gauge/csv_printer.hpp>
 #include <gauge/json_printer.hpp>
 
-#include <kodo/has_systematic_encoder.hpp>
 #include <kodo/set_systematic_off.hpp>
 #include <kodo/rlnc/full_vector_codes.hpp>
 #include <kodo/rlnc/perpetual_codes.hpp>
@@ -214,9 +213,9 @@ struct storage_benchmark : public gauge::time_benchmark
             e = rand() % 256;
         }
 
-        m_encoder->set_symbols(sak::storage(m_data_in));
+        m_encoder->set_const_symbols(sak::storage(m_data_in));
 
-        m_decoder->set_symbols(sak::storage(m_data_out));
+        m_decoder->set_mutable_symbols(sak::storage(m_data_out));
 
         // Prepare storage for the encoded payloads
         uint32_t payload_count = erased_symbols * m_factor;
@@ -231,19 +230,19 @@ struct storage_benchmark : public gauge::time_benchmark
 
     void encode_payloads()
     {
-        m_encoder->set_symbols(sak::storage(m_data_in));
+        m_encoder->set_const_symbols(sak::storage(m_data_in));
 
         // We switch any systematic operations off, because we are only
         // interested in producing coded symbols
-        if (kodo::has_systematic_encoder<Encoder>::value)
-            kodo::set_systematic_off(m_encoder);
+        if (kodo::has_set_systematic_off<Encoder>::value)
+            kodo::set_systematic_off(*m_encoder);
 
         uint32_t payload_count = (uint32_t)m_payloads.size();
 
         for (uint32_t i = 0; i < payload_count; ++i)
         {
             std::vector<uint8_t> &payload = m_payloads[i];
-            m_encoder->encode(&payload[0]);
+            m_encoder->write_payload(&payload[0]);
         }
     }
 
@@ -253,7 +252,7 @@ struct storage_benchmark : public gauge::time_benchmark
 
         for (uint32_t i = 0; i < payload_count; ++i)
         {
-            m_decoder->decode(&m_payloads[i][0]);
+            m_decoder->read_payload(&m_payloads[i][0]);
 
             m_processed_symbols++;
 
@@ -322,14 +321,17 @@ struct storage_benchmark : public gauge::time_benchmark
             // i.e. no symbols already decoded.
             m_decoder->initialize(*m_decoder_factory);
 
-            m_decoder->set_symbols(sak::storage(m_data_out));
+            m_decoder->set_mutable_symbols(sak::storage(m_data_out));
 
             // Set the existing original symbols
             for (uint32_t i = 0; i < symbols; ++i)
             {
                 // Skip the erased symbols
                 if (erased.count(i) == 0)
-                    m_decoder->decode_symbol(&m_data_out[i * symbol_size], i);
+                {
+                    m_decoder->read_uncoded_symbol(
+                        &m_data_out[i * symbol_size], i);
+                }
             }
 
             // Decode the payloads

@@ -6,6 +6,9 @@ detailed list of every change, see the Git log.
 
 Latest
 ------
+* Major: Upgrade to waf-tools 3
+* Major: Upgrade to kodo 32
+* Minor: Upgrade to gauge 10
 * Minor: Upgrade to OpenFEC 1.4.2
 * Minor: Update local dependency gauge to version 9.
 * Minor: Added a perpetual benchmark in kodo_storage
