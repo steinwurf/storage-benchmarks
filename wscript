@@ -26,7 +26,7 @@ def resolve(ctx):
     ctx.add_dependency(resolve.ResolveVersion(
         name='kodo',
         git_repository='github.com/steinwurf/kodo.git',
-        major=33))
+        major=34))
 
     # Internal dependencies
     if ctx.is_toplevel():

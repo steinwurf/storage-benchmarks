@@ -352,8 +352,20 @@ struct storage_benchmark : public gauge::time_benchmark
                 // Skip the erased symbols
                 if (erased.count(i) == 0)
                 {
-                    m_decoder->read_uncoded_symbol(
-                        &m_data_out[i * symbol_size], i);
+                    if (std::is_same<Feature, block_coding_on>::value &&
+                        kodo::has_read_payloads<Decoder>::value)
+                    {
+                        // It is enough to mark the symbol as uncoded when
+                        // using the block_decoder layer
+                        m_decoder->set_symbol_uncoded(i);
+                    }
+                    else
+                    {
+                        // We need to update the decoding matrix with
+                        // read_uncoded_symbol() if we use the single decoder
+                        m_decoder->read_uncoded_symbol(
+                            &m_data_out[i * symbol_size], i);
+                    }
                 }
             }
 

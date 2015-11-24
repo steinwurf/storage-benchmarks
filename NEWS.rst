@@ -6,6 +6,7 @@ detailed list of every change, see the Git log.
 
 Latest
 ------
+* Major: Upgrade to kodo 34
 * Major: Upgrade to waf-tools 3
 * Major: Upgrade to kodo 32
 * Minor: Upgrade to gauge 10
