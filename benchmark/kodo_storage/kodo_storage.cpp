@@ -8,22 +8,34 @@
 #include <set>
 #include <string>
 #include <algorithm>
-
-#include <boost/make_shared.hpp>
+#include <type_traits>
 
 #include <gauge/gauge.hpp>
 #include <gauge/console_printer.hpp>
 #include <gauge/python_printer.hpp>
 #include <gauge/csv_printer.hpp>
 #include <gauge/json_printer.hpp>
-
-#include <kodo/set_systematic_off.hpp>
-#include <kodo/rlnc/full_vector_codes.hpp>
-#include <kodo/rlnc/perpetual_codes.hpp>
-
 #include <tables/table.hpp>
 
-template<class Encoder, class Decoder, bool Relaxed = false>
+#include <kodo/set_systematic_off.hpp>
+#include <kodo/set_mutable_symbols.hpp>
+#include <kodo/read_payloads.hpp>
+#include <kodo/write_payloads.hpp>
+
+#include <kodo/rlnc/full_vector_codes.hpp>
+#include <kodo/rlnc/perpetual_codes.hpp>
+#include <kodo/reed_solomon/codes.hpp>
+
+/// Tag to turn on block coding in the benchmark
+struct block_coding_on{};
+
+/// Tag to turn off block coding in the benchmark
+struct block_coding_off{};
+
+/// Tag to activate relaxed mode in the benchmark
+struct relaxed{};
+
+template<class Encoder, class Decoder, class Feature = block_coding_off>
 struct storage_benchmark : public gauge::time_benchmark
 {
     typedef typename Encoder::factory encoder_factory;
@@ -90,7 +102,7 @@ struct storage_benchmark : public gauge::time_benchmark
 
         results.set_value("goodput", measurement());
 
-        if (Relaxed)
+        if (std::is_same<Feature, relaxed>::value)
         {
             gauge::config_set cs = get_current_configuration();
             std::string type = cs.get_value<std::string>("type");
@@ -122,7 +134,7 @@ struct storage_benchmark : public gauge::time_benchmark
             {
                 // We did not generate enough payloads to decode successfully,
                 // so we will generate more payloads for next run
-                if (Relaxed == true)
+                if (std::is_same<Feature, relaxed>::value)
                     ++m_factor;
 
                 return false;
@@ -221,10 +233,14 @@ struct storage_benchmark : public gauge::time_benchmark
         uint32_t payload_count = erased_symbols * m_factor;
         assert(payload_count > 0);
 
+        // Allocate contiguous payload buffer and store payload pointers
+        uint32_t payload_size = m_encoder->payload_size();
+        m_payload_buffer.resize(payload_count * payload_size);
         m_payloads.resize(payload_count);
+
         for (uint32_t i = 0; i < payload_count; ++i)
         {
-            m_payloads[i].resize(m_encoder->payload_size());
+            m_payloads[i] = &m_payload_buffer[i * payload_size];
         }
     }
 
@@ -237,28 +253,45 @@ struct storage_benchmark : public gauge::time_benchmark
         if (kodo::has_set_systematic_off<Encoder>::value)
             kodo::set_systematic_off(*m_encoder);
 
-        uint32_t payload_count = (uint32_t)m_payloads.size();
+        uint32_t payload_count = (uint32_t) m_payloads.size();
 
-        for (uint32_t i = 0; i < payload_count; ++i)
+        if (std::is_same<Feature, block_coding_on>::value &&
+            kodo::has_write_payloads<Encoder>::value)
         {
-            std::vector<uint8_t> &payload = m_payloads[i];
-            m_encoder->write_payload(&payload[0]);
+            kodo::write_payloads(*m_encoder, m_payloads.data(), payload_count);
+        }
+        else
+        {
+            for (uint32_t i = 0; i < payload_count; ++i)
+            {
+                m_encoder->write_payload(m_payloads[i]);
+            }
         }
     }
 
     void decode_payloads()
     {
-        uint32_t payload_count = (uint32_t)m_payloads.size();
+        uint32_t payload_count = (uint32_t) m_payloads.size();
 
-        for (uint32_t i = 0; i < payload_count; ++i)
+        if (std::is_same<Feature, block_coding_on>::value &&
+            kodo::has_read_payloads<Decoder>::value)
         {
-            m_decoder->read_payload(&m_payloads[i][0]);
+            kodo::read_payloads(*m_decoder, m_payloads.data(), payload_count);
 
-            m_processed_symbols++;
-
-            if (m_decoder->is_complete())
+            m_processed_symbols += payload_count;
+        }
+        else
+        {
+            for (uint32_t i = 0; i < payload_count; ++i)
             {
-                return;
+                m_decoder->read_payload(m_payloads[i]);
+
+                m_processed_symbols++;
+
+                if (m_decoder->is_complete())
+                {
+                    return;
+                }
             }
         }
     }
@@ -266,14 +299,6 @@ struct storage_benchmark : public gauge::time_benchmark
     /// Run the encoder
     void run_encode()
     {
-        gauge::config_set cs = get_current_configuration();
-
-        uint32_t symbols = cs.get_value<uint32_t>("symbols");
-        uint32_t symbol_size = cs.get_value<uint32_t>("symbol_size");
-
-        m_encoder_factory->set_symbols(symbols);
-        m_encoder_factory->set_symbol_size(symbol_size);
-
         // The clock is running
         RUN
         {
@@ -297,6 +322,7 @@ struct storage_benchmark : public gauge::time_benchmark
 
         // Prepare the data buffer for the decoder
         std::copy(m_data_in.begin(), m_data_in.end(), m_data_out.begin());
+
         // Randomly delete original symbols that will be restored by processing
         // the encoded symbols
         std::set<uint32_t> erased;
@@ -310,9 +336,6 @@ struct storage_benchmark : public gauge::time_benchmark
             std::fill_n(m_data_out.begin() + random_symbol * symbol_size,
                         symbol_size, 0);
         }
-
-        m_decoder_factory->set_symbols(symbols);
-        m_decoder_factory->set_symbol_size(symbol_size);
 
         // The clock is running
         RUN
@@ -329,8 +352,20 @@ struct storage_benchmark : public gauge::time_benchmark
                 // Skip the erased symbols
                 if (erased.count(i) == 0)
                 {
-                    m_decoder->read_uncoded_symbol(
-                        &m_data_out[i * symbol_size], i);
+                    if (std::is_same<Feature, block_coding_on>::value &&
+                        kodo::has_read_payloads<Decoder>::value)
+                    {
+                        // It is enough to mark the symbol as uncoded when
+                        // using the block_decoder layer
+                        m_decoder->set_symbol_uncoded(i);
+                    }
+                    else
+                    {
+                        // We need to update the decoding matrix with
+                        // read_uncoded_symbol() if we use the single decoder
+                        m_decoder->read_uncoded_symbol(
+                            &m_data_out[i * symbol_size], i);
+                    }
                 }
             }
 
@@ -339,7 +374,7 @@ struct storage_benchmark : public gauge::time_benchmark
         }
     }
 
-    void run_benchmark()
+    void test_body() final
     {
         gauge::config_set cs = get_current_configuration();
 
@@ -382,8 +417,11 @@ protected:
     /// The output data
     std::vector<uint8_t> m_data_out;
 
-    /// Storage for encoded symbols
-    std::vector< std::vector<uint8_t> > m_payloads;
+    /// Contiguous buffer for coded payloads
+    std::vector<uint8_t> m_payload_buffer;
+
+    /// Pointers to each payload in the payload buffer
+    std::vector<uint8_t*> m_payloads;
 
     /// Multiplication factor for payload_count
     uint32_t m_factor;
@@ -391,14 +429,14 @@ protected:
 
 
 /// A test block represents an encoder and decoder pair
-template<class Encoder, class Decoder, bool Relaxed = false>
+template<class Encoder, class Decoder, class Feature = block_coding_off>
 struct sparse_storage_benchmark :
-    public storage_benchmark<Encoder,Decoder,Relaxed>
+    public storage_benchmark<Encoder,Decoder,Feature>
 {
 public:
 
     /// The type of the base benchmark
-    typedef storage_benchmark<Encoder,Decoder,Relaxed> Super;
+    typedef storage_benchmark<Encoder,Decoder,Feature> Super;
 
     /// We need access to the encoder built to adjust the average number of
     /// nonzero symbols
@@ -460,14 +498,14 @@ public:
 };
 
 /// A test block represents an encoder and decoder pair
-template<class Encoder, class Decoder, bool Relaxed = false>
+template<class Encoder, class Decoder, class Feature = block_coding_off>
 struct perpetual_storage_benchmark :
-    public storage_benchmark<Encoder,Decoder,Relaxed>
+    public storage_benchmark<Encoder,Decoder,Feature>
 {
 public:
 
     /// The type of the base benchmark
-    typedef storage_benchmark<Encoder,Decoder,Relaxed> Super;
+    typedef storage_benchmark<Encoder,Decoder,Feature> Super;
 
     /// We need access to the encoder to adjust the perpetual width ratio
     using Super::m_encoder;
@@ -618,43 +656,53 @@ BENCHMARK_OPTION(perpetual_options)
 // FullRLNC
 //------------------------------------------------------------------
 
-typedef storage_benchmark<
+using setup_rlnc_throughput8 = storage_benchmark<
     kodo::rlnc::shallow_full_vector_encoder<fifi::binary8>,
-    kodo::rlnc::shallow_full_vector_decoder<fifi::binary8>>
-    setup_rlnc_throughput8;
+    kodo::rlnc::shallow_full_vector_decoder<fifi::binary8>>;
 
-BENCHMARK_F_INLINE(setup_rlnc_throughput8, FullRLNC, Binary8, 1)
-{
-    run_benchmark();
-}
+BENCHMARK_F(setup_rlnc_throughput8, FullRLNC, Binary8, 1);
+
+using setup_block_rlnc_throughput8 = storage_benchmark<
+    kodo::rlnc::shallow_full_vector_encoder<fifi::binary8>,
+    kodo::rlnc::shallow_full_vector_decoder<fifi::binary8>, block_coding_on>;
+
+BENCHMARK_F(setup_block_rlnc_throughput8, BlockFullRLNC, Binary8, 5);
 
 //------------------------------------------------------------------
 // SparseFullRLNC
 //------------------------------------------------------------------
 
-typedef sparse_storage_benchmark<
+using setup_sparse_rlnc_throughput8 = sparse_storage_benchmark<
     kodo::rlnc::shallow_sparse_full_vector_encoder<fifi::binary8>,
-    kodo::rlnc::shallow_full_vector_decoder<fifi::binary8>, true>
-    setup_sparse_rlnc_throughput8;
+    kodo::rlnc::shallow_full_vector_decoder<fifi::binary8>, relaxed>;
 
-BENCHMARK_F_INLINE(setup_sparse_rlnc_throughput8, SparseFullRLNC, Binary8, 1)
-{
-    run_benchmark();
-}
+BENCHMARK_F(setup_sparse_rlnc_throughput8, SparseFullRLNC, Binary8, 1);
 
 //------------------------------------------------------------------
-// Shallow Perpetual RLNC
+// Perpetual RLNC
 //------------------------------------------------------------------
 
-typedef perpetual_storage_benchmark<
+using setup_perpetual_throughput8 = perpetual_storage_benchmark<
     kodo::rlnc::shallow_perpetual_encoder<fifi::binary8>,
-    kodo::rlnc::shallow_perpetual_decoder<fifi::binary8>, true>
-    setup_perpetual_throughput8;
+    kodo::rlnc::shallow_perpetual_decoder<fifi::binary8>, relaxed>;
 
-BENCHMARK_F_INLINE(setup_perpetual_throughput8, Perpetual, Binary8, 1)
-{
-    run_benchmark();
-}
+BENCHMARK_F(setup_perpetual_throughput8, Perpetual, Binary8, 1);
+
+//------------------------------------------------------------------
+// Reed Solomon
+//------------------------------------------------------------------
+
+using setup_reed_solomon_throughput = storage_benchmark<
+    kodo::reed_solomon::shallow_encoder<fifi::binary8>,
+    kodo::reed_solomon::shallow_decoder<fifi::binary8>>;
+
+BENCHMARK_F(setup_reed_solomon_throughput, ReedSolomon, Binary8, 5);
+
+using setup_block_reed_solomon_throughput = storage_benchmark<
+    kodo::reed_solomon::shallow_encoder<fifi::binary8>,
+    kodo::reed_solomon::shallow_decoder<fifi::binary8>, block_coding_on>;
+
+BENCHMARK_F(setup_block_reed_solomon_throughput, BlockReedSolomon, Binary8, 5);
 
 int main(int argc, const char* argv[])
 {
