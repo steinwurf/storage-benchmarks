@@ -17,14 +17,14 @@
 #include <gauge/json_printer.hpp>
 #include <tables/table.hpp>
 
-#include <kodo/set_systematic_off.hpp>
-#include <kodo/set_mutable_symbols.hpp>
-#include <kodo/read_payloads.hpp>
-#include <kodo/write_payloads.hpp>
+#include <kodo_core/set_systematic_off.hpp>
+#include <kodo_core/set_mutable_symbols.hpp>
+#include <kodo_core/read_payloads.hpp>
+#include <kodo_core/write_payloads.hpp>
 
-#include <kodo/rlnc/full_vector_codes.hpp>
-#include <kodo/rlnc/perpetual_codes.hpp>
-#include <kodo/reed_solomon/codes.hpp>
+#include <kodo_rlnc/full_vector_codes.hpp>
+#include <kodo_rlnc/perpetual_codes.hpp>
+#include <kodo_reed_solomon/codes.hpp>
 
 /// Tag to turn on block coding in the benchmark
 struct block_coding_on{};
@@ -225,9 +225,9 @@ struct storage_benchmark : public gauge::time_benchmark
             e = rand() % 256;
         }
 
-        m_encoder->set_const_symbols(sak::storage(m_data_in));
+        m_encoder->set_const_symbols(storage::storage(m_data_in));
 
-        m_decoder->set_mutable_symbols(sak::storage(m_data_out));
+        m_decoder->set_mutable_symbols(storage::storage(m_data_out));
 
         // Prepare storage for the encoded payloads
         uint32_t payload_count = erased_symbols * m_factor;
@@ -246,19 +246,20 @@ struct storage_benchmark : public gauge::time_benchmark
 
     void encode_payloads()
     {
-        m_encoder->set_const_symbols(sak::storage(m_data_in));
+        m_encoder->set_const_symbols(storage::storage(m_data_in));
 
         // We switch any systematic operations off, because we are only
         // interested in producing coded symbols
-        if (kodo::has_set_systematic_off<Encoder>::value)
-            kodo::set_systematic_off(*m_encoder);
+        if (kodo_core::has_set_systematic_off<Encoder>::value)
+            kodo_core::set_systematic_off(*m_encoder);
 
         uint32_t payload_count = (uint32_t) m_payloads.size();
 
         if (std::is_same<Feature, block_coding_on>::value &&
-            kodo::has_write_payloads<Encoder>::value)
+            kodo_core::has_write_payloads<Encoder>::value)
         {
-            kodo::write_payloads(*m_encoder, m_payloads.data(), payload_count);
+            kodo_core::write_payloads(
+                *m_encoder, m_payloads.data(), payload_count);
         }
         else
         {
@@ -274,9 +275,10 @@ struct storage_benchmark : public gauge::time_benchmark
         uint32_t payload_count = (uint32_t) m_payloads.size();
 
         if (std::is_same<Feature, block_coding_on>::value &&
-            kodo::has_read_payloads<Decoder>::value)
+            kodo_core::has_read_payloads<Decoder>::value)
         {
-            kodo::read_payloads(*m_decoder, m_payloads.data(), payload_count);
+            kodo_core::read_payloads(
+                *m_decoder, m_payloads.data(), payload_count);
 
             m_processed_symbols += payload_count;
         }
@@ -344,7 +346,7 @@ struct storage_benchmark : public gauge::time_benchmark
             // i.e. no symbols already decoded.
             m_decoder->initialize(*m_decoder_factory);
 
-            m_decoder->set_mutable_symbols(sak::storage(m_data_out));
+            m_decoder->set_mutable_symbols(storage::storage(m_data_out));
 
             // Set the existing original symbols
             for (uint32_t i = 0; i < symbols; ++i)
@@ -353,7 +355,7 @@ struct storage_benchmark : public gauge::time_benchmark
                 if (erased.count(i) == 0)
                 {
                     if (std::is_same<Feature, block_coding_on>::value &&
-                        kodo::has_read_payloads<Decoder>::value)
+                        kodo_core::has_read_payloads<Decoder>::value)
                     {
                         // It is enough to mark the symbol as uncoded when
                         // using the block_decoder layer
@@ -657,14 +659,14 @@ BENCHMARK_OPTION(perpetual_options)
 //------------------------------------------------------------------
 
 using setup_rlnc_throughput8 = storage_benchmark<
-    kodo::rlnc::shallow_full_vector_encoder<fifi::binary8>,
-    kodo::rlnc::shallow_full_vector_decoder<fifi::binary8>>;
+    kodo_rlnc::shallow_full_vector_encoder<fifi::binary8>,
+    kodo_rlnc::shallow_full_vector_decoder<fifi::binary8>>;
 
 BENCHMARK_F(setup_rlnc_throughput8, FullRLNC, Binary8, 1);
 
 using setup_block_rlnc_throughput8 = storage_benchmark<
-    kodo::rlnc::shallow_full_vector_encoder<fifi::binary8>,
-    kodo::rlnc::shallow_full_vector_decoder<fifi::binary8>, block_coding_on>;
+    kodo_rlnc::shallow_full_vector_encoder<fifi::binary8>,
+    kodo_rlnc::shallow_full_vector_decoder<fifi::binary8>, block_coding_on>;
 
 BENCHMARK_F(setup_block_rlnc_throughput8, BlockFullRLNC, Binary8, 5);
 
@@ -673,8 +675,8 @@ BENCHMARK_F(setup_block_rlnc_throughput8, BlockFullRLNC, Binary8, 5);
 //------------------------------------------------------------------
 
 using setup_sparse_rlnc_throughput8 = sparse_storage_benchmark<
-    kodo::rlnc::shallow_sparse_full_vector_encoder<fifi::binary8>,
-    kodo::rlnc::shallow_full_vector_decoder<fifi::binary8>, relaxed>;
+    kodo_rlnc::shallow_sparse_full_vector_encoder<fifi::binary8>,
+    kodo_rlnc::shallow_full_vector_decoder<fifi::binary8>, relaxed>;
 
 BENCHMARK_F(setup_sparse_rlnc_throughput8, SparseFullRLNC, Binary8, 1);
 
@@ -683,8 +685,8 @@ BENCHMARK_F(setup_sparse_rlnc_throughput8, SparseFullRLNC, Binary8, 1);
 //------------------------------------------------------------------
 
 using setup_perpetual_throughput8 = perpetual_storage_benchmark<
-    kodo::rlnc::shallow_perpetual_encoder<fifi::binary8>,
-    kodo::rlnc::shallow_perpetual_decoder<fifi::binary8>, relaxed>;
+    kodo_rlnc::shallow_perpetual_encoder<fifi::binary8>,
+    kodo_rlnc::shallow_perpetual_decoder<fifi::binary8>, relaxed>;
 
 BENCHMARK_F(setup_perpetual_throughput8, Perpetual, Binary8, 1);
 
@@ -693,14 +695,14 @@ BENCHMARK_F(setup_perpetual_throughput8, Perpetual, Binary8, 1);
 //------------------------------------------------------------------
 
 using setup_reed_solomon_throughput = storage_benchmark<
-    kodo::reed_solomon::shallow_encoder<fifi::binary8>,
-    kodo::reed_solomon::shallow_decoder<fifi::binary8>>;
+    kodo_reed_solomon::shallow_encoder<fifi::binary8>,
+    kodo_reed_solomon::shallow_decoder<fifi::binary8>>;
 
 BENCHMARK_F(setup_reed_solomon_throughput, ReedSolomon, Binary8, 5);
 
 using setup_block_reed_solomon_throughput = storage_benchmark<
-    kodo::reed_solomon::shallow_encoder<fifi::binary8>,
-    kodo::reed_solomon::shallow_decoder<fifi::binary8>, block_coding_on>;
+    kodo_reed_solomon::shallow_encoder<fifi::binary8>,
+    kodo_reed_solomon::shallow_decoder<fifi::binary8>, block_coding_on>;
 
 BENCHMARK_F(setup_block_reed_solomon_throughput, BlockReedSolomon, Binary8, 5);
 
