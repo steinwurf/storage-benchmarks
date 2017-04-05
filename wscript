@@ -4,47 +4,8 @@
 APPNAME = 'storage-benchmarks'
 VERSION = '0.1.0'
 
-import waflib.extras.wurf_options
-
-
-def options(opt):
-
-    opt.load('wurf_common_tools')
-
-
-def resolve(ctx):
-
-    import waflib.extras.wurf_dependency_resolve as resolve
-
-    ctx.load('wurf_common_tools')
-
-    ctx.add_dependency(resolve.ResolveVersion(
-        name='waf-tools',
-        git_repository='github.com/steinwurf/waf-tools.git',
-        major=3))
-
-    ctx.add_dependency(resolve.ResolveVersion(
-        name='kodo-rlnc',
-        git_repository='github.com/steinwurf/kodo-rlnc.git',
-        major=4))
-
-    ctx.add_dependency(resolve.ResolveVersion(
-        name='kodo-reed-solomon',
-        git_repository='github.com/steinwurf/kodo-reed-solomon.git',
-        major=4))
-
-    # Internal dependencies
-    if ctx.is_toplevel():
-
-        ctx.add_dependency(resolve.ResolveVersion(
-            name='gauge',
-            git_repository='github.com/steinwurf/gauge.git',
-            major=10))
-
 
 def configure(conf):
-
-    conf.load("wurf_common_tools")
 
     if conf.is_mkspec_platform('linux'):
         if not conf.env['LIB_PTHREAD']:
@@ -168,8 +129,6 @@ def get_asmformat(bld):
 
 
 def build(bld):
-
-    bld.load("wurf_common_tools")
 
     if '-O2' in bld.env['CFLAGS']:
         bld.env['CFLAGS'].remove('-O2')

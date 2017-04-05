@@ -6,6 +6,10 @@ detailed list of every change, see the Git log.
 
 Latest
 ------
+* Major: Upgrade to waf-tools 4
+* Major: Upgrade to kodo-rlnc 6
+* Major: Upgrade to kodo-reed-solomon 6
+* Minor: Upgrade to gauge 11
 * Major: Upgrade to kodo-rlnc 4
 * Major: Upgrade to kodo-reed-solomon 4
 * Major: Upgrade to kodo 34
