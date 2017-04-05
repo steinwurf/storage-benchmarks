@@ -12,7 +12,7 @@
 #include <vector>
 #include <set>
 
-#include <sak/aligned_allocator.hpp>
+#include <allocate/aligned_allocator.hpp>
 
 #include <gauge/gauge.hpp>
 
@@ -143,7 +143,7 @@ protected:
     uint8_t g_tbls[KMAX*TEST_SOURCES*32];
 
     /// Type of the aligned vector
-    typedef std::vector<value_type, sak::aligned_allocator<value_type>>
+    typedef std::vector<value_type, allocate::aligned_allocator<value_type>>
         aligned_vector;
 
     /// The first buffer of vectors

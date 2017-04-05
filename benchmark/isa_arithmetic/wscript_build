@@ -5,4 +5,4 @@ bld.program(
     features = 'cxx benchmark',
     source   = bld.path.ant_glob('*.cpp'),
     target   = 'isa_arithmetic',
-    use      = ['isa', 'gauge', 'sak_includes'])
+    use      = ['isa', 'gauge', 'allocate'])
