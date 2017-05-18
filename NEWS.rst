@@ -6,6 +6,12 @@ detailed list of every change, see the Git log.
 
 Latest
 ------
+* tbd
+
+1.0.0
+-----
+* Major: Upgrade to kodo-rlnc 7
+* Major: Upgrade to kodo-reed-solomon 8
 * Major: Upgrade to waf-tools 4
 * Major: Upgrade to kodo-rlnc 6
 * Major: Upgrade to kodo-reed-solomon 6
