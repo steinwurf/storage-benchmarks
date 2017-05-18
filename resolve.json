@@ -4,21 +4,27 @@
         "resolver": "git",
         "method": "semver",
         "major": 4,
-        "sources": ["github.com/steinwurf/waf-tools.git"]
+        "sources": [
+            "github.com/steinwurf/waf-tools.git"
+        ]
     },
     {
         "name": "kodo-rlnc",
         "resolver": "git",
         "method": "semver",
-        "major": 6,
-        "sources": ["github.com/steinwurf/kodo-rlnc.git"]
+        "major": 7,
+        "sources": [
+            "github.com/steinwurf/kodo-rlnc.git"
+        ]
     },
     {
         "name": "kodo-reed-solomon",
         "resolver": "git",
         "method": "semver",
-        "major": 7,
-        "sources": ["github.com/steinwurf/kodo-reed-solomon.git"]
+        "major": 8,
+        "sources": [
+            "github.com/steinwurf/kodo-reed-solomon.git"
+        ]
     },
     {
         "name": "gauge",
@@ -26,6 +32,8 @@
         "resolver": "git",
         "method": "semver",
         "major": 11,
-        "sources": ["github.com/steinwurf/gauge.git"]
+        "sources": [
+            "github.com/steinwurf/gauge.git"
+        ]
     }
 ]
