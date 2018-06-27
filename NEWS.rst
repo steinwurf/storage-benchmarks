@@ -7,6 +7,7 @@ detailed list of every change, see the Git log.
 Latest
 ------
 * tbd
+* Major: Upgrade to kodo-reed-solomon 13
 
 1.0.0
 -----
