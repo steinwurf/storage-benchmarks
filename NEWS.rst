@@ -7,6 +7,10 @@ detailed list of every change, see the Git log.
 Latest
 ------
 * tbd
+
+2.0.0
+-----
+* Major: Upgrade to kodo-rlnc 13
 * Major: Upgrade to kodo-reed-solomon 13
 
 1.0.0
