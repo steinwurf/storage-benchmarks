@@ -21,7 +21,7 @@
         "name": "kodo-reed-solomon",
         "resolver": "git",
         "method": "semver",
-        "major": 8,
+        "major": 13,
         "sources": [
             "github.com/steinwurf/kodo-reed-solomon.git"
         ]
